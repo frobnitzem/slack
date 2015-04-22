@@ -1,0 +1,7 @@
+*.o
+*.a
+bin/tce2
+the_ast.dot
+the_ast.dot.svg
+test.tex
+test1.tex
