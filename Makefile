@@ -11,11 +11,13 @@ CC=gcc
 LD=gcc
 #CFLAGS=-ggdb -I$(PWD)/include
 CFLAGS=-ggdb -I/sw/include -I$(PWD)/include
+#CFLAGS += -DYYDEBUG
 #CFLAGS += $(shell pkg-config gnutls --cflags) -DSRCDIR=$(PWD)
 #LDFLAGS=-lixp -lpthread -rdynamic -ldl
-LDFLAGS=-L/sw/lib -lpthread -ldl
+LDFLAGS=-L/sw/lib -lpthread -ldl -ltbb
 #LDFLAGS += $(shell pkg-config gnutls --libs)
 
+BIN_OBJ=$(PWD)/bin/tce2.o
 LIB=$(PWD)/lib/libtce2.a
 LIBS=$(PWD)/lib/parse.a $(PWD)/lib/exec.a $(PWD)/lib/serial.a $(PWD)/lib/lib.a
 
@@ -32,7 +34,7 @@ distclean: clean
 	rm -f bin/tce2
 
 clean:
-	rm -f $(LIBS) $(LIB)
+	rm -f $(LIBS) $(LIB) $(BIN_OBJ)
 	rm -f bin/server.o bin/repl.o
 	@( for i in $(DIRS); do \
 	    $(MAKE) -C $$i clean; \

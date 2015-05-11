@@ -1,4 +1,4 @@
-OBJS = print_dot.o
+OBJS = print_dot.o print.o
 
 ../lib/serial.a:	$(OBJS)
 	$(AR) -cr $@ $^

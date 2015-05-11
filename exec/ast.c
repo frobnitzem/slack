@@ -2,12 +2,13 @@
 #include <string.h>
 #include <ast.h>
 
-Ast *mkCons(Ast *car, Ast *cdr) {
-    Ast *r = malloc(PAIR_SIZE);
-    r->type = TCons;
-    r->len = PAIR_SIZE;
+Ast *mkScale(Ast *a, float scale) {
+    Ast *r = malloc(SCALE_SIZE);
+    r->type = TScale;
+    r->len = SCALE_SIZE;
 
-    r->pair->a = car; r->pair->b = cdr;
+    r->scale->a = a;
+    r->scale->s = scale;
     return r;
 }
 
@@ -35,48 +36,49 @@ Ast *mkDot(Ast *a, Ast *b, Slice ind) {
         fprintf(stderr, "fatal: bad index size - should be 1.\n");
         exit(1);
     }
+    if(ind->n % 2 != 0) { // ind contains pairs of uint8_t
+        fprintf(stderr, "fatal: mkDot called with odd number of indices?\n");
+        exit(1);
+    }
 
     r->type = TDot;
     r->len = DOT_SIZE(ind->n);
     
     r->dot->a = a; r->dot->b = b;
-    r->dot->n = ind->n;
+    r->dot->n = ind->n/2;
     memcpy(r->dot->ind, ind->x, ind->n);
     return r;
 }
 
-// Or you can just link a ref by updating a in-place
-// (assuming its not referenced anywhere else)
-Ast *mkNamed(Ast *ref, Ast *term) {
-    uint32_t len = strlen(ref->ref->name)+1;
-    Ast *r = malloc(REF_SIZE(ref->ref->n, len));
+Ast *mkRef(char *name) {
+    uint32_t len = strlen(name)+1;
+    Ast *r = malloc(REF_SIZE(len));
 
-    r->type = TNamed;
-    r->len = REF_SIZE(ref->ref->n, len);
+    r->type = TRef;
+    r->len = REF_SIZE(len);
 
-    r->ref->name = (char *)r->ref->ind + ref->ref->n;
-    r->ref->n = ref->ref->n;
-    memcpy(r->ref->ind, ref->ref->ind, ref->ref->n+len);
-    r->ref->a = term;
+    memcpy(r->ref, name, len);
     return r;
 }
 
-Ast *mkRef(char *name, Slice ind) {
-    uint32_t len = strlen(name)+1;
-    Ast *r = malloc(REF_SIZE(ind->n, len));
-    if(ind->width != 1) {
-        fprintf(stderr, "fatal: bad index size - should be 1.\n");
-        exit(1);
-    }
+Ast *mkTranspose(Ast *a, int n, uint8_t *perm) {
+    uint32_t len = T_SIZE(n);
+    Ast *r = malloc(len);
+    r->type = TTranspose;
+    r->len = len;
+    r->t->a = a;
+    r->t->n = n;
+    memcpy(r->t->perm, perm, n);
+    return r;
+}
 
-    r->type = TRef;
-    r->len = REF_SIZE(ind->n, len);
+Ast *mkLit(Tensor *t) {
+    Ast *r = malloc(BASE_SIZE);
 
-    r->ref->name = (char *)r->ref->ind + ind->n;
-    r->ref->n = ind->n;
-    memcpy(r->ref->ind, ind->x, ind->n);
-    memcpy(r->ref->name, name, len);
-    r->ref->a = NULL;
+    r->type  = TBase;
+    r->len   = BASE_SIZE;
+    r->base->type = TTens;
+    r->base->t = t;
     return r;
 }
 
@@ -92,17 +94,23 @@ char *estrdup(char *a) {
 
 int ast_children(Ast *a, Ast ***t) {
     switch(a->type) {
-    case TNamed:
-        *t = &a->ref->a;
+    case TTranspose:
+        *t = &a->t->a;
+        return 1;
+    case TScale:
+        *t = &a->scale->a;
+        return 1;
+    case TReduce:
+        *t = &a->reduce->a;
         return 1;
     case TSum:
     case TDiff:
-    case TCons:
         *t = &a->pair->a;
         return 2;
     case TDot:
         *t = &a->dot->a;
         return 2;
+    case TBase:
     case TRef:
         //*t = NULL;
         //return 0;

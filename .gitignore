@@ -1,5 +1,7 @@
 *.o
 *.a
+*.dot
+*.svg
 bin/tce2
 the_ast.dot
 the_ast.dot.svg

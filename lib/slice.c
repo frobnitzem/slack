@@ -5,7 +5,7 @@
 
 // Construct a slice
 Slice slice_ctor(size_t width, size_t n, size_t max) {
-    Slice s = malloc(sizeof(struct Slice));
+    Slice s = malloc(sizeof(struct slice_s));
     if(max < n) {
         fprintf(stderr, "fatal: bad slice constructor\n");
         exit(1);
@@ -38,13 +38,14 @@ void slice_copy(Slice dst, Slice src) {
 Slice slice_append(Slice s, void *next, int m) {
     Slice t;
     if(s->max >= s->n+m) { // 2 views of same data
-        t = malloc(sizeof(struct Slice));
+        t = malloc(sizeof(struct slice_s));
         t->width = s->width;
         t->n = s->n+m;
         t->max = s->max;
         t->x = s->x;
     } else {
         t = slice_ctor(s->width, s->n+m, 2*s->max + m);
+        memcpy(t->x, s->x, s->width*s->n);
     }
     memcpy(t->x + s->width*s->n, next, s->width*m);
     return t;
@@ -56,7 +57,7 @@ Slice slice(Slice s, int st, int en) {
         fprintf(stderr, "fatal: bad slice operation.\n");
         exit(1);
     }
-    t = malloc(sizeof(struct Slice));
+    t = malloc(sizeof(struct slice_s));
     t->x = s->x + s->width*st;
     t->n = en - st;
     t->max = s->max - st;

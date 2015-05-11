@@ -1,3 +1,7 @@
+/*  Copyright David M. Rogers, 2015
+ *  This code is made available under terms of the GNU GPL.
+ *  A copy is included at the top-level of the source tree.
+ */
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <stdio.h>
@@ -5,8 +9,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "ast.h"
-#include "parser.h"
+#include <ast.h>
+#include <parser.h>
 
 
 #define usage() { \
@@ -14,12 +18,25 @@
     exit(1); \
 }
 
+static void show_assign(const char *key, void *value, void *ignored) {
+    Ast *a = (Ast *)value;
+    char *name;
+
+    printf("Showing '%s':\n", key);
+    write_ast(stdout, a);
+    asprintf(&name, "%s.dot", key);
+    show_ast(name, a, 1);
+    free(name);
+}
+
 int main(int argc, char *argv[]) {
     struct Environ e = {
         .debuglevel = 1,
     };
-    Ast *a;
     FILE *f;
+    SMap *defs;
+    int n;
+    Ast **a;
 
     if(argc != 2) {
         usage();
@@ -30,12 +47,13 @@ int main(int argc, char *argv[]) {
             return -1;
     }
 
-    e.ind_map = smap_ctor(32);
-    e.nindices = 0;
-    a = tce2_parse_inp(&e, f);
-    printf("Total: %d indices.\n", e.nindices);
-    show_ast("the_ast.dot", a, 1);
-    smap_dtor(&e.ind_map);
+    if( (defs = tce2_parse_inp(&e, f)) == NULL) {
+        printf("bad parse.\n");
+    } else {
+        n = smap_iter(defs, show_assign, NULL);
+        printf("Total assignments = %d\n", n);
+    }
+    smap_dtor(&defs);
  
     return 0;
 }

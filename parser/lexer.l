@@ -66,12 +66,18 @@ UAL3 (\xe0(\xa0[\x80-\x95\x9a\xa4\xa8]|\xa1[\x80-\x98]|\xa2[\xa0\xa2-\xac]|\xa4[
 "_" |
 "^" |
 "="  	{ return yytext[0]; }
+"&" |
+"\\\\" |
+"\\left" |
+"\\right" { /* ignore formatting characters */ }
 "\\sum"  { return SUM; }
 "{" |
 "("	{ yyextra->nest += 1; return yytext[0]; }
+"["     { yyextra->nest += 1; return '('; }
 "}" |
 ")"	{ yyextra->nest -= 1; return yytext[0]; }
-\n({UWS}*\n)*      { if(yyextra->nest <= 0) {yyextra->nest = 0; return EOL;} }
+"]"     { yyextra->nest -= 1; return ')'; }
+\n({UWS}*\n)* { if(yyextra->nest <= 0) {yyextra->nest = 0; return EOL;} }
 {UWS}   { /* ignore whitespace */ }
 
  /* comments */
@@ -91,7 +97,7 @@ UAL3 (\xe0(\xa0[\x80-\x95\x9a\xa4\xa8]|\xa1[\x80-\x98]|\xa2[\xa0\xa2-\xac]|\xa4[
 <COMMENT><<EOF>>        { printf("%d: Unterminated comment\n",
                             yylineno); return 0; }
 
-\%.*	{ /* ignore comments */ }
+\%[^\n]*\n	{ /* ignore comments */ }
 
  /* Support Latex's quirky behavior with chars outside of {}-s */
 {UALPHA} { yylval->str = strdup(yytext);
@@ -146,13 +152,13 @@ char **argv;
 }
 }*/
 
-void tce2_lex_ctor(struct Lexer_Context *this) {
-   yylex_init(&this->scanner);
-   yyset_extra(this, this->scanner);
+void tce2_lex_ctor(struct Lexer_Context *t) {
+   yylex_init(&t->scanner);
+   yyset_extra(t, t->scanner);
 }
 
-void tce2_lex_dtor(struct Lexer_Context *this) {
-   yylex_destroy(this->scanner);
+void tce2_lex_dtor(struct Lexer_Context *t) {
+   yylex_destroy(t->scanner);
 }
 
 void tce2_error(YYLTYPE *llocp, struct Lexer_Context *ctxt, const char *s, ...) {

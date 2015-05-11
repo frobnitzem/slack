@@ -6,22 +6,59 @@
 #include <serial.h>
 #include <lib/map.h>
 
-void write_indices(FILE *f, int n, uint8_t *ind) {
+void write_list(FILE *f, int n, uint8_t *ind) {
     int i;
-    if(!n) return;
+    if(!n) {
+        fprintf(f, "()");
+        return;
+    }
 
-    fprintf(f, "[");
+    fprintf(f, "(");
     for(i=0; i<n-1; i++) {
         fprintf(f, "%u,", ind[i]);
     }
-    fprintf(f, "%u]", ind[i]);
+    fprintf(f, "%u)", ind[i]);
+}
+
+void write_list2(FILE *f, int n, uint8_t *ind) {
+    int i;
+    if(!n) {
+        fprintf(f, "[]");
+        return;
+    }
+
+    fprintf(f, "[");
+    for(i=0; i<n-1; i++) {
+        fprintf(f, "(%u,%u),", ind[2*i], ind[2*i+1]);
+    }
+    fprintf(f, "(%u,%u)]", ind[2*i], ind[2*i+1]);
+}
+
+void write_int_list(FILE *f, int n, int *ind) {
+    int i;
+    if(!n) {
+        fprintf(f, "()");
+        return;
+    }
+
+    fprintf(f, "(");
+    for(i=0; i<n-1; i++) {
+        fprintf(f, "%d,", ind[i]);
+    }
+    fprintf(f, "%d)", ind[i]);
 }
 
 void write_ast_label(FILE *f, Ast *a) {
     switch(a->type) {
-    case TNamed:
-        fprintf(f, "= %s", a->ref->name);
-        write_indices(f, a->ref->n, a->ref->ind);
+    case TScale:
+        fprintf(f, "x %.2f", a->scale->s);
+        break;
+    case TTranspose:
+        fprintf(f, "transpose ");
+        write_list(f, a->t->n, a->t->perm);
+        break;
+    case TRef:
+        fprintf(f, "%s", a->ref);
         break;
     case TSum:
         fprintf(f, "+");
@@ -29,16 +66,17 @@ void write_ast_label(FILE *f, Ast *a) {
     case TDiff:
         fprintf(f, "-");
         break;
-    case TCons:
-        fprintf(f, "::");
-        break;
     case TDot:
-        fprintf(f, ":");
-        write_indices(f, a->dot->n, a->dot->ind);
+        fprintf(f, "*");
+        write_list2(f, a->dot->n, a->dot->ind);
         break;
-    case TRef:
-        fprintf(f, "%s", a->ref->name);
-        write_indices(f, a->ref->n, a->ref->ind);
+    case TBase:
+        if(a->base->type == TTens) {
+            fprintf(f, "Tensor ");
+            write_int_list(f, a->base->t->n, a->base->t->shape);
+        } else {
+            fprintf(f, "unknown Base");
+        };
         break;
     default:
         fprintf(f, "unk");
