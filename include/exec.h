@@ -7,7 +7,6 @@
 #include <lib/slice.h>
 #include <lib/smap.h>
 
-#include "memspace.h"
 #include "tens.h"
 
 extern void magma_sgemm(

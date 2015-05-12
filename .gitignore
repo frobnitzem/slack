@@ -2,6 +2,9 @@
 *.a
 *.dot
 *.svg
+*.so
+*.pyc
+*.dylib
 bin/tce2
 the_ast.dot
 the_ast.dot.svg
