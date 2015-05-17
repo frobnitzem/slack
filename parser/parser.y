@@ -66,27 +66,47 @@ assign: literal '=' term            { if(smap_put(context->ret,
                                     }
       ;
 
-expr: INT                            { $$ = (float)$1; }
+expr: INT                            { $$ = (double)$1; }
     | FLOAT                          { $$ = $1; }
     ;
 
 
 
  /* Use the order from the first arg. to +/- */
-term: term '+' mfactor               { $1->a = mkSum($1->a,
-                                                     ck_transpose($3, $1->ind));
+term: term '+' mfactor               { int ord;
+                                       uint8_t *perm= get_perm($3->ind,$1->ind,
+                                                                &ord);
+                                       if(perm == NULL) {
+                   tce2_error(&yylloc, NULL, "Indices in '+' don't match!\n");
+                   exit(1);
+                                       }
+                                       $1->a = simpAdd($1->scale, $1->a,
+                                                     $3->scale, $3->a,
+                                                     $1->ind->n, perm);
+                                       free(perm);
                                        $$ = $1;
+                                       $$->scale = 1.0;
                                        act_dtor($3);
                                      }
-    | term '-' mfactor               { $1->a = mkDiff($1->a,
-                                                  ck_transpose($3, $1->ind));
+    | term '-' mfactor               { int ord;
+                                       uint8_t *perm= get_perm($3->ind,$1->ind,
+                                                                &ord);
+                                       if(perm == NULL) {
+                   tce2_error(&yylloc, NULL, "Indices in '-' don't match!\n");
+                   exit(1);
+                                       }
+                                       $1->a = simpAdd($1->scale, $1->a,
+                                               (-1.)*$3->scale, $3->a,
+                                                     $1->ind->n, perm);
+                                       free(perm);
                                        $$ = $1;
+                                       $$->scale = 1.0;
                                        act_dtor($3);
                                      }
     | mfactor                        { $$ = $1; }
     ;
 
-mfactor: expr factor { $2->a = mkScale($2->a, $1); $$ = $2; }
+mfactor: expr factor { $2->scale *= $1; $$ = $2; }
        | factor { $$ = $1; }
        ;
 
@@ -102,7 +122,11 @@ contraction: SUM indices factor factor {
                    tce2_error(&yylloc, NULL, "Bad contraction!\n");
                    exit(1); // as if that wasn't fatal enough!
                }
-               $$ = mkActive(mkDot($3->a, $4->a, ctr), act);
+               $$ = mkActive(mkTensDot($3->scale*$4->scale,
+                                       $3->a, $3->ind->n,
+                                       $4->a, $4->ind->n, ctr),
+                             act);
+               slice_dtor(&ctr);
                act_dtor($3); act_dtor($4);
              }
            ;
@@ -114,7 +138,7 @@ literal: STRING indices { $$ = mkActive(mkRef($1), $2); }
  /* copy-rule to allow end-of-parse checking */
 indices: ck_indices { if(ck_duplicate($1)) {
                         tce2_error(&yylloc, NULL, "Duplicate indices!\n");
-                        exit(1); // as if that wasn't fatal enough!
+                        exit(1);
                       }
                       $$ = $1;
                     }

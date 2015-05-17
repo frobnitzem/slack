@@ -35,6 +35,7 @@ SMap *tce2_parse_inp(struct Environ *e, FILE *f) {
 struct active *mkActive(Ast *a, Slice ind) {
     struct active *r = malloc(sizeof(struct active));
     r->a = a;
+    r->scale = 1.0;
     r->ind = ind;
     return r;
 }
@@ -47,8 +48,7 @@ void act_dtor(struct active *act) {
 // If necessary, form a transposition operation to get from act->a to output
 // order ind.
 Ast *ck_transpose(struct active *act, Slice ind) {
-    int i, ord;
-    uint8_t *dim = ind->x;
+    int ord;
     uint8_t *perm;
     Ast *r;
 
@@ -58,27 +58,41 @@ Ast *ck_transpose(struct active *act, Slice ind) {
         return NULL;
     }
 
-    perm = malloc(ind->n);
-    ord = 1;
-    for(i=0; i<ind->n; i++) {
-        if( (perm[i] = find_index(dim[i], act->ind)) < 0) {
+    if( (perm = get_perm(act->ind, ind, &ord)) == NULL) {
+        exit(1); // return value not yet tested.
+    }
+
+    if(!ord) {
+        r = mkTranspose(act->scale, act->a, ind->n, perm);
+    } else if(act->scale != 1.0) {
+        r = mkScale(act->scale, act->a);
+    } else {
+        r = act->a;
+    }
+
+    free(perm);
+    return r;
+}
+
+uint8_t *get_perm(Slice ind, Slice out, int *is_ord) {
+    int i, ord=1;
+    uint8_t *dim = out->x;
+    uint8_t *perm = malloc(out->n);
+
+    for(i=0; i<out->n; i++) {
+        if( (perm[i] = find_index(dim[i], ind)) < 0) {
             fprintf(stderr, "Error! index %d not "
                             "found in input tensor.\n", dim[i]);
-            exit(1); // return value not yet tested.
+            free(perm);
             return NULL;
         }
         ord &= (perm[i] == i);
     }
+    *is_ord = ord;
 
-    if(ord) { // result is already ordered.
-        free(perm);
-        return act->a;
-    }
-    r = mkTranspose(act->a, ind->n, perm);
-    free(perm);
-
-    return r;
+    return perm;
 }
+
 
 // Index stitching during parsing.
 // ca, cb are input index codes
@@ -90,7 +104,7 @@ int partition_inds(Slice *cc_p, Slice *ctr_p, Slice csum, Slice ca, Slice cb) {
     uint8_t *cc, *ind;
     uint8_t *ctr;
     int nleft = ca->n + cb->n - 2*csum->n;
-    int i, j;
+    int i, j, k;
 
     // Check for double-contraction of the same index.
     if(ck_duplicate(csum)) {
@@ -130,6 +144,13 @@ int partition_inds(Slice *cc_p, Slice *ctr_p, Slice csum, Slice ca, Slice cb) {
     for(i=0; i<cb->n; i++) {
         if(find_index(ind[i], csum) < 0) {
             cc[j++] = ind[i];
+            for(k=0; k<ca->n - csum->n; k++) { // Check overlap.
+                if(cc[k] == ind[i]) {
+                    fprintf(stderr, "Output index %d exists on both "
+                                    "left and right side.\n", ind[i]);
+                    return -1;
+                }
+            }
         }
     }
     /*if(j != nleft) { // shouldn't be possible.

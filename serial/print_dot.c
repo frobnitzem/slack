@@ -48,32 +48,53 @@ void write_int_list(FILE *f, int n, int *ind) {
     fprintf(f, "%d)", ind[i]);
 }
 
-void write_ast_label(FILE *f, Ast *a) {
+static void show_dot_node(FILE *f, Ast *a, int rank) {
+    Ast **t;
+    int i, nch;
+
+    fprintf(f, "\"%p\" [label=\"", a);
     switch(a->type) {
     case TScale:
-        fprintf(f, "x %.2f", a->scale->s);
-        break;
-    case TTranspose:
-        fprintf(f, "transpose ");
-        write_list(f, a->t->n, a->t->perm);
-        break;
+        fprintf(f, "\" rank=%d];\n"
+                   "\"%p\" -> \"%p\" [label=\"%.1f\"];\n", rank,
+                       a, a->scale->a, a->scale->alpha);
+        return;
+    case TAdd:
+        fprintf(f, "+\" rank=%d];\n"
+                   "\"%p\" -> \"%p\" [taillabel=\"%.1f\"];\n", rank,
+                       a, a->add->a, a->add->alpha);
+        fprintf(f, "\"%p\" -> \"%p\" [taillabel=\"%.1f\" label=\"",
+                       a, a->add->b, a->add->alpha);
+        write_list(f, a->add->n, a->add->pb);
+        fprintf(f, "\"];\n");
+        return;
+    case TDot: // TODO: these should really be edge labels...
+        if(a->dot->alpha != 1.0) {
+          fprintf(f, "[%d]\\n* %.1f\" rank=%d];\n",
+                  a->dot->nc, a->dot->alpha, rank);
+        } else {
+          fprintf(f, "[%d]\\n*\" rank=%d];\n", a->dot->nc, rank);
+        }
+        fprintf(f,"\"%p\" -> \"%p\" [taillabel=\"%.1f\"];\n",
+                     a,    a->dot->c,      a->dot->beta);
+
+        fprintf(f, "\"%p\" -> \"%p\" [label=\"", a, a->dot->a);
+        write_list(f, a->dot->na, a->dot->pa);
+        fprintf(f, "\"];\n");
+
+        fprintf(f, "\"%p\" -> \"%p\" [label=\"", a, a->dot->b);
+        write_list(f, a->dot->nb, a->dot->pb);
+        fprintf(f, "\"];\n");
+        return;
     case TRef:
         fprintf(f, "%s", a->ref);
         break;
-    case TSum:
-        fprintf(f, "+");
-        break;
-    case TDiff:
-        fprintf(f, "-");
-        break;
-    case TDot:
-        fprintf(f, "*");
-        write_list2(f, a->dot->n, a->dot->ind);
-        break;
     case TBase:
-        if(a->base->type == TTens) {
+        if(a->base->type == BTens) {
             fprintf(f, "Tensor ");
             write_int_list(f, a->base->t->n, a->base->t->shape);
+        } else if(a->base->type == BZeroTens) {
+            fprintf(f, "Zero");
         } else {
             fprintf(f, "unknown Base");
         };
@@ -81,20 +102,19 @@ void write_ast_label(FILE *f, Ast *a) {
     default:
         fprintf(f, "unk");
     }
-}
+    fprintf(f, "\" rank=%d];\n", rank);
 
-static void show_dot_node(FILE *f, Ast *a, int n) {
-    /*if(a == &ast_nil) {
-        fprintf(f, "\"%p\" [label=\"nil\"]\n");
-    }*/
-    fprintf(f, "\"%p\" [label=\"", a);
-    write_ast_label(f, a);
-    fprintf(f, "\" rank=%d];\n", n);
+    // default is to not label links
+    nch = ast_children(a, &t);
+    for(i=0; i<nch; i++) {
+        if(t[i] == NULL) continue;
+        fprintf(f, "\"%p\" -> \"%p\";\n", a, t[i]);
+    }
 }
 
 static void dot_rec(FILE *f, Map *m, Ast *a, int n) {
     Ast **t;
-    int i, nch;
+    int nch, i;
 
     if(map_get(m, &a) != NULL)
         return;
@@ -105,10 +125,6 @@ static void dot_rec(FILE *f, Map *m, Ast *a, int n) {
     nch = ast_children(a, &t);
     for(i=0; i<nch; i++) {
         if(t[i] == NULL) continue;
-        fprintf(f, "\"%p\" -> \"%p\";\n", a, t[i]);
-    }
-    for(i=0; i<nch; i++) {
-        if(t[i] == NULL) continue;
         dot_rec(f, m, t[i], n+1);
     }
 }
@@ -116,7 +132,7 @@ static void dot_rec(FILE *f, Map *m, Ast *a, int n) {
 void ast_to_dot(FILE *f, Ast *a) {
     Map *m;
 
-    if( (m = map_ctor(16, sizeof(Ast *))) == NULL) {
+    if( (m = map_ctor(32, sizeof(Ast *))) == NULL) {
         return;
     }
 

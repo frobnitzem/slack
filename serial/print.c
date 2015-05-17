@@ -36,29 +36,24 @@ void display_ind2(FILE *f, int n, uint8_t *x) {
     fprintf(f, "(%u,%u)]", x[0], x[1]);
 }
 
-// Binary primitive operation.
-void display_prim(void *f, char *bop, struct Pair *p, int pri) {
-    int bp = 2; // precedence of binary operation
-
-    if(pri > bp) {
-        fprintf(f, "(");
-    }
-    display_ast(f, p->a, bp);
-    fprintf(f, " %s ", bop);
-    display_ast(f, p->b, bp);
-    if(pri > bp) {
-        fprintf(f, ")");
-    }
-    return;
-}
-
 void display_ast(FILE *f, Ast *a, int pri) {
     switch(a->type) {
-    case TSum:
-        display_prim(f, "`+t`", a->pair, pri);
-        break;
-    case TDiff:
-        display_prim(f, "`-t`", a->pair, pri);
+    case TAdd:
+        if(pri > 100) {
+            fprintf(f, "(");
+        }
+        fprintf(f, "tadd ");
+        display_ind(f, a->add->n, a->add->pb);
+
+        fprintf(f, " %f ", a->add->alpha);
+        display_ast(f, a->add->a, 101);
+
+        fprintf(f, " %f ", a->add->beta);
+        display_ast(f, a->add->b, 101);
+
+        if(pri > 100) {
+            fprintf(f, ")");
+        }
         break;
     case TRef:
         fprintf(f, "%s", a->ref);
@@ -67,25 +62,16 @@ void display_ast(FILE *f, Ast *a, int pri) {
         if(pri > 100) {
             fprintf(f, "(");
         }
-        fprintf(f, "tensdot ");
+        fprintf(f, "tdot %f ", a->dot->beta);
+        display_ast(f, a->dot->c, 101);
+        fprintf(f, " %f ", a->dot->alpha);
         display_ast(f, a->dot->a, 101);
+        fprintf(f, " ");
+        display_ind(f, a->dot->na, a->dot->pa);
         fprintf(f, " ");
         display_ast(f, a->dot->b, 101);
         fprintf(f, " ");
-        display_ind2(f, a->dot->n, a->dot->ind);
-        if(pri > 100) {
-            fprintf(f, ")");
-        }
-        break;
-    case TTranspose:
-        if(pri > 100) {
-            fprintf(f, "(");
-        }
-        fprintf(f, "transpose ");
-        fprintf(f, " ");
-        display_ast(f, a->t->a, 101);
-        fprintf(f, " ");
-        display_ind(f, a->t->n, a->t->perm);
+        display_ind(f, a->dot->nb, a->dot->pb);
         if(pri > 100) {
             fprintf(f, ")");
         }
@@ -94,12 +80,17 @@ void display_ast(FILE *f, Ast *a, int pri) {
         if(pri > 100) {
             fprintf(f, "(");
         }
-        fprintf(f, "tscale %f ", a->scale->s);
+        fprintf(f, "tscale %f ", a->scale->alpha);
         display_ast(f, a->scale->a, 101);
         if(pri > 100) {
             fprintf(f, ")");
         }
         break;
+    case TBase:
+        if(a->base->type == BZeroTens) {
+            fprintf(f, "Zero");
+            break;
+        }
     default:
         fprintf(f, "(invalid Ast type %d)", a->type);
     }

@@ -10,82 +10,85 @@
 #include <lib/slice.h>
 #include <lib/smap.h>
 
-// various structures used during execution
-#include "exec.h"
+#include "tens.h"
 
 typedef struct Ast_s Ast;
 
 // Tuninit is just for uncopied objecs during GC passes.
-enum AstType { Tuninit=0, TRef=1, TBase=2, TTranspose=3,
-               TSum=4, TDiff=5, TDot=6, TScale=7, TReduce=8 } ;
+enum AstType { Tuninit=0, TRef=1, TBase=2,
+               TScale=4, TAdd=5, TDot=6 } ;
 
-enum BaseType { TTens=1 };
+// ZeroTens does not have base->t set.
+enum BaseType { BZeroTens=0, BTens=1, };
 
 /* Ast Types */
-struct Pair {
-    Ast *a;
-    Ast *b;
-};
-struct Dot {
+// Note that transpose can be implemented via Add
+struct Add { // alpha*A[i] + beta*B[f(i)]
     Ast *a, *b;
+    double alpha, beta;
     int n; // number of indices
-    uint8_t ind[0]; // ind represents the indices to sum over (n x 2)
+    uint8_t pb[0]; // permutation (transpose indices for b)
 };
-struct Reduce { // sum over indices of the tensor
-    Ast *a;
-    int n;
-    uint8_t ind[0]; // ind represents the indices to sum over
+struct Dot { // alpha (a . b) + beta C
+    Ast *a, *b, *c;
+    double alpha, beta;
+    int na, nb, nc;
+    uint8_t *pb;   // permutation of b -- points to end of pa
+    uint8_t pa[0]; // permutation of a (see tensdot)
 };
 struct Scale {
     Ast *a;
-    float s;
-};
-struct Transpose {
-    Ast *a;
-    int n; // total number of indices
-    uint8_t perm[0];
+    double alpha;
 };
 struct Base {
     enum BaseType type;
     union {
-        Tensor *t;
+        Tensor t[0];
     };
 };
 
 struct Ast_s {
     enum AstType type;
     uint32_t len;
+    Tensor *val; // pointer to node output
     union {
         struct Base   base[0];
-        struct Pair   pair[0];
         struct Dot    dot[0];
+        struct Add    add[0];
         struct Scale  scale[0];
-        struct Reduce reduce[0];
-        struct Transpose t[0];
         char   ref[0];
     };
 };
 #define AST_HDR_SIZE    (sizeof(Ast))
-#define BASE_SIZE       (AST_HDR_SIZE + sizeof(struct Base))
-#define PAIR_SIZE       (AST_HDR_SIZE + sizeof(struct Pair))
-#define DOT_SIZE(n)     (AST_HDR_SIZE + sizeof(struct Dot) + n)
-#define REF_SIZE(n)     (AST_HDR_SIZE + n)
-#define T_SIZE(n)       (AST_HDR_SIZE + sizeof(struct Transpose) + n)
 #define SCALE_SIZE      (sizeof(Ast) + sizeof(struct Scale))
-#define REDUCE_SIZE     (sizeof(Ast) + sizeof(struct Reduce))
+#define ADD_SIZE(n)     (AST_HDR_SIZE + sizeof(struct Add) + n)
+#define DOT_SIZE(n,m)   (AST_HDR_SIZE + sizeof(struct Dot) + n + m)
+#define REF_SIZE(n)     (AST_HDR_SIZE + n)
+
+#define BASE_SIZE       (AST_HDR_SIZE + sizeof(struct Base))
+#define T_SIZE(n)       (BASE_SIZE + sizeof(Tensor) + n)
 
 struct Environ {
     int debuglevel;
 };
 
-Ast *mkScale(Ast *, float);
-Ast *mkNamed(Ast *ref, Ast *term);
-Ast *mkSum(Ast *, Ast *);
-Ast *mkDiff(Ast *a, Ast *b); // a - b
-Ast *mkDot(Ast *a, Ast *b, Slice ind);
+Ast *mkScale(const double, Ast *);
+Ast *simpAdd(const double alpha, Ast *a,
+             const double beta,  Ast *b, const int n, const uint8_t *pb);
+Ast *mkAdd(const double alpha, Ast *a,
+           const double beta,  Ast *b, const int n, const uint8_t *pb);
+Ast *mkTranspose(const double alpha, Ast *,
+                 const int n, const uint8_t *perm); // wrapper for mkAdd
+
+Ast *mkDot(const double alpha, Ast *a, const int na, const uint8_t *pa,
+                               Ast *b, const int nb, const uint8_t *pb,
+           const double  beta, Ast *c, const int nc);
+Ast *mkTensDot(const double alpha, Ast *a, const int na,
+                                   Ast *b, const int nb, Slice ind);
+
 Ast *mkRef(char *name);
-Ast *mkTranspose(Ast *, int n, uint8_t *perm);
-Ast *mkLit(Tensor *);
+Ast *mkLit(const int n, const int *shape, double *x);
+Ast *mkZero(); // zero Ast element
 
 int ast_children(Ast *a, Ast ***t);
 

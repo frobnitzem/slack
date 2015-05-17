@@ -49,11 +49,15 @@ AstNode *AstNode::add_node(Ast *b, AstGraph *g, SMap *map) {
 }
 
 void AstNode::operator()(tbb::flow::continue_msg) {
+    int i;
     void **inp = (void **)malloc(inps.size()*sizeof(void *));
-    for(int i=0; i<inps.size(); i++) {
+    for(i=0; i<inps.size(); i++) {
         inp[i] = inps[i]->out;
     }
-    out = exec_ast(op, inps.size(), inp);
+    out = exec_ast(op, inps.size(), inp, (void *)mem);
+    for(i=0; i<inps.size(); i++) {
+        release(inp[i]);
+    }
     free(inp);
 }
 

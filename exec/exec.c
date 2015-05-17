@@ -16,12 +16,6 @@ Slice rev_permut(Slice s);
 //
 // The binding expressions are refcounted.
 
-int exec_tensor(Ast *a, SMap *env, Slice *m, Tensor *res) {
-    switch(a->type) {
-    };
-    return 0;
-}
-
 // Traverse the DAG and give each object encountered a refcount.
 // The initial refcount is assumed to be zero.
 //static int count_refs() {
@@ -73,6 +67,8 @@ Tensor *reduce_dot(struct Prim *p, Tensor *a, Tensor *b, Tensor *c) {
     tensor_dtor(&b);
     return c;
 }
+
+
 
 // construct the inverse of a permutation
 Slice rev_permut(Slice s) {

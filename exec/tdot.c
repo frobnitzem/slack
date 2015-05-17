@@ -16,7 +16,7 @@ void print_vec(int *x, int n);
 void print_nvec(char *, int *x, int n);
 
 /* Computes xGEMM-like:
- * C[i] += sum_{ctr} A[f(i)] B[g(i)]
+ * C[i] = alpha (sum_{ctr} A[f(i)] B[g(i)]) + beta C[i]
  * where C has no overlap in memory space with A or B
  *
  * where the basic step can at least take part in a fused-multiply-add
@@ -50,8 +50,8 @@ void print_nvec(char *, int *x, int n);
  */
 
 void tensdot(const double alpha,
-             double *A, const int na, const int *sa, const int *pa,
-             double *B, const int nb, const int *sb, const int *pb,
+             double *A, const int na, const int *sa, const uint8_t *pa,
+             double *B, const int nb, const int *sb, const uint8_t *pb,
              const double beta,
              double *C, int nc) {
     if(na > 100 || nb > 100 || nc > na+nb || na < 1 || nb < 1 || nc < 0

@@ -41,7 +41,7 @@ void print_nvec(char *, int *x, int n);
 void tensadd(const double alpha,
              double *A, const int n, const int *sa,
              const double beta,
-             double *B, const int *perm) {
+             double *B, const uint8_t *perm) {
     if(n > 100 || n < 1) {
         printf("whoa there!\n");
         return;

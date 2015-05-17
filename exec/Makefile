@@ -1,4 +1,4 @@
-OBJS=ast.o exec.o tdot.o tadd.o
+OBJS=ast.o tens.o tdot.o tadd.o memspace.o
 
 ../lib/exec.a:	$(OBJS)
 	$(AR) -cr $@ $^

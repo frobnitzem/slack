@@ -13,18 +13,20 @@ struct Lexer_Context {
 };
 
 // An active parse holds both an Ast object along with
-// a collection of "active" index labels.
+// a collection of "active" index labels and a scale.
 // The latter are consulted to provide permutations
-// whenever a binary operation is encountered.
+// and alpha / beta whenever a binary operation is encountered.
 struct active {
     Ast *a;
     Slice ind;
+    double scale;
 };
 
 /* Mucking about with explicit indices. */
 struct active *mkActive(Ast *a, Slice ind);
 void act_dtor(struct active *act);
 Ast *ck_transpose(struct active *act, Slice ind);
+uint8_t *get_perm(Slice ind, Slice out, int *is_ord);
 int partition_inds(Slice *cc_p, Slice *ctr_p, Slice csum, Slice ca, Slice cb);
 int ck_duplicate(Slice a);
 

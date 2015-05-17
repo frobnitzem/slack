@@ -14,7 +14,9 @@ class AstNode {
   public:
     const Ast *op;
     void *out; // block in graph's memory allocator object
+                // there is a copy danger here...
     AstNode(const Ast *a, AstGraph *g, SMap *m); // : op(a);
+    //AstNode(a) op(a.op), mem(a.mem), inps(); // copying my object is a total show-stopper
     ~AstNode() {};
     void operator()(tbb::flow::continue_msg);
     std::vector<AstNode *> inps; // node labels for inputs

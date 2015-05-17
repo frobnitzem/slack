@@ -25,7 +25,6 @@ class MemSpace {
       void *get_info(void *x, int *nref, size_t *sz);
       void release(void *x);
       void *uniq(void *x, size_t sz);
-      // If I have to, I guess.
       void insert_unmanaged(void *buf, size_t sz, void *info);
       // just remove with MemSpace::remove(buf)
     private:

@@ -1,13 +1,14 @@
 #ifndef _EXEC_H
 #define _EXEC_H
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <lib/slice.h>
 #include <lib/smap.h>
 
 #include "tens.h"
+
+// This operates between blocks
+//void *exec_ast(Ast *op, int n, void **arg);
 
 extern void magma_sgemm(
     int transA, int transB,
