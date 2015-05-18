@@ -50,7 +50,10 @@ struct Base {
 struct Ast_s {
     enum AstType type;
     uint32_t len;
+    // the following two are for in-tree execution
     Tensor *val; // pointer to node output
+    int nref;    // number of references to node.
+
     union {
         struct Base   base[0];
         struct Dot    dot[0];
@@ -66,7 +69,7 @@ struct Ast_s {
 #define REF_SIZE(n)     (AST_HDR_SIZE + n)
 
 #define BASE_SIZE       (AST_HDR_SIZE + sizeof(struct Base))
-#define T_SIZE(n)       (BASE_SIZE + sizeof(Tensor) + n)
+#define T_SIZE(n)       (BASE_SIZE + sizeof(Tensor) + sizeof(int)*n)
 
 struct Environ {
     int debuglevel;
@@ -88,6 +91,7 @@ Ast *mkTensDot(const double alpha, Ast *a, const int na,
 
 Ast *mkRef(char *name);
 Ast *mkLit(const int n, const int *shape, double *x);
+Ast *mkRand(Slice shape);
 Ast *mkZero(); // zero Ast element
 
 int ast_children(Ast *a, Ast ***t);
@@ -95,5 +99,6 @@ int ast_children(Ast *a, Ast ***t);
 char *estrdup(char *);
 
 #include "serial.h"
+#include "exec.h"
 
 #endif

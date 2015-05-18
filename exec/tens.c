@@ -21,7 +21,7 @@ void tadd(const double alpha, Tensor *a,
         goto err;
     }
     for(i=0; i<a->n; i++) {
-        if(a->shape[i] != b->shape[i]) goto err;
+        if(a->shape[i] != b->shape[pb[i]]) goto err;
     }
     tensadd(alpha, a->x, a->n, a->shape,
             beta,  b->x, pb);
@@ -31,6 +31,9 @@ err:
     printf("Error! Adding tensors with shapes: ");
     print_vec(a->shape, a->n); printf(" and "); print_vec(b->shape, b->n);
     printf("\n");
+    for(i=0; i<a->n; i++)
+        printf(" %u", pb[i]);
+    printf(".\n");
 }
 
 void tscale(const double alpha, Tensor *a) {
@@ -45,6 +48,9 @@ void tscale(const double alpha, Tensor *a) {
         printf(" has len = %d\n", a->len);
         return;
     }
+    // i = 1;
+    //dscal_(&j, &alpha, a->c, &i);
+
     for(i=0; i<a->len; i++) {
         a->x[i] *= alpha;
     }
@@ -61,7 +67,7 @@ void tscale(const double alpha, Tensor *a) {
  */
 
 // Construct the tensor header (t->x = NULL);
-Tensor *tensor_ctor(int nd, int *shape) {
+Tensor *tensor_ctor(const int nd, const int *shape) {
     int i;
     Tensor *t = (Tensor *)malloc(sizeof(Tensor)+sizeof(int)*nd);
 
@@ -70,23 +76,28 @@ Tensor *tensor_ctor(int nd, int *shape) {
         t->len *= shape[i];
 
     memcpy(t->shape, shape, sizeof(int)*nd);
+    t->n = nd;
     t->x = NULL;
 
     return t;
 }
 
+// Note: this is called on unmanaged objects as well,
+// where it is expected to do nothing (hence the deferral
+// to release_block_if on whether to set t = 0).
 void tensor_dtor(Tensor **t, MemSpace *mem) {
     if(mem != NULL) {
-        release_block_if(mem, (*t)->x, *t);
+        release_block_if(mem, (*t)->x, (void **)t);
     } else {
         free(*t);
+        *t = NULL;
     }
-    *t = NULL;
 }
 
 // Allocate a new tensor.
 // x will be managed by MemSpace.
-Tensor *mkTensor(int nd, int *shape, int nref, MemSpace *mem) {
+Tensor *mkTensor(const int nd, const int *shape,
+                 const int nref, MemSpace *mem) {
     Tensor *t = tensor_ctor(nd, shape);
     t->x = (double *)reserve_block(mem, sizeof(double)*t->len, nref);
     return t;
@@ -95,16 +106,25 @@ Tensor *mkTensor(int nd, int *shape, int nref, MemSpace *mem) {
 // Cast a block of mem. to a tensor.
 // x won't be managed by MemSpace, and the user is responsible
 // for eventually free()-ing t.
-Tensor *toTensor(double *x, int nd, int *shape, MemSpace *mem) {
+Tensor *toTensor(double *x, const int nd, const int *shape, MemSpace *mem) {
     Tensor *t = tensor_ctor(nd, shape);
     t->x = x;
     insert_unmanaged(mem, x, sizeof(double)*t->len);
     return t;
 }
 
-Tensor *uniq_tens(MemSpace *mem, Tensor *t) {
+// Allocate a tensor from managed mem.
+// Note: this leaves the mem. uninitialized.
+// If desired, use: memset(t->x, 0, sizeof(double)*t->len);
+Tensor *newTensor(const int nd, const int *shape,
+                  const int nref, MemSpace *mem) {
+    Tensor *t = mkTensor(nd, shape, nref, mem);
+    return t;
+}
+
+Tensor *uniq_tens(MemSpace *mem, Tensor *t, const int nref) {
     Tensor *u;
-    void *y = uniq_block(mem, t->x, sizeof(double)*t->len);
+    void *y = uniq_block(mem, t->x, sizeof(double)*t->len, nref);
     if(y == t->x) { // already uniq
         return t;
     }

@@ -4,10 +4,17 @@
 
 void print_vec(int *x, int n);
 
+Ast *new_ast(size_t len) {
+    Ast *r = malloc(len);
+    r->len = len;
+    r->val = NULL;
+    r->nref = 0;
+    return r;
+}
+
 Ast *mkScale(double alpha, Ast *a) {
-    Ast *r = malloc(SCALE_SIZE);
+    Ast *r = new_ast(SCALE_SIZE);
     r->type = TScale;
-    r->len = SCALE_SIZE;
 
     r->scale->a = a;
     r->scale->alpha = alpha;
@@ -31,8 +38,13 @@ Ast *simpAdd(const double alpha, Ast *a,
 
     if(isZero(b))
         return a;
-    if(isZero(a) && isId(n, pb)) {
-        return b;
+    if(isZero(a)) {
+        if(isId(n, pb)) {
+            return b;
+        }
+        if(b->type == TAdd) {
+            // TODO -- check for Zero in b.
+        }
     }
     if(b->type == TDot && isZero(b->dot->c)) { // FMA case
         // reorder output indices of b->dot to match a
@@ -53,7 +65,8 @@ Ast *simpAdd(const double alpha, Ast *a,
         a->dot->beta = beta;
         a->dot->c = b;
         // transpose final result
-        return mkTranspose(alpha, a, n, pb);
+        //return mkTranspose(1.0, a, n, pb);
+        return mkAdd(0.0, mkZero(), 1.0, a, n, pb);
     }
 
     // default
@@ -62,10 +75,8 @@ Ast *simpAdd(const double alpha, Ast *a,
 
 Ast *mkAdd(const double alpha, Ast *a,
            const double beta,  Ast *b, const int n, const uint8_t *pb) {
-    uint32_t len = ADD_SIZE(n);
-    Ast *r = malloc(len);
+    Ast *r = new_ast(ADD_SIZE(n));
     r->type = TAdd;
-    r->len = len;
 
     r->add->a = a;         r->add->b = b;
     r->add->alpha = alpha; r->add->beta = beta;
@@ -75,17 +86,16 @@ Ast *mkAdd(const double alpha, Ast *a,
 }
 
 Ast *mkTranspose(const double alpha, Ast *b, const int n, const uint8_t *perm) {
-    return mkAdd(0.0, mkZero(), alpha, b, n, perm);
+    //return mkAdd(0.0, mkZero(), alpha, b, n, perm);
+    return simpAdd(0.0, mkZero(), alpha, b, n, perm);
 }
 
 Ast *mkDot(const double alpha, Ast *a, const int na, const uint8_t *pa,
                                Ast *b, const int nb, const uint8_t *pb,
            const double beta,  Ast *c, const int nc) {
-    uint32_t len = DOT_SIZE(na,nb);
-    Ast *r = malloc(len);
+    Ast *r = new_ast(DOT_SIZE(na,nb));
 
     r->type = TDot;
-    r->len = len;
     r->dot->pb = r->dot->pa + na;
 
     r->dot->a = a; r->dot->b = b; r->dot->c = c;
@@ -154,32 +164,46 @@ Ast *mkTensDot(const double alpha, Ast *a, const int na,
 
 Ast *mkRef(char *name) {
     uint32_t len = strlen(name)+1;
-    Ast *r = malloc(REF_SIZE(len));
+    Ast *r = new_ast(REF_SIZE(len));
 
     r->type = TRef;
-    r->len = REF_SIZE(len);
-
     memcpy(r->ref, name, len);
     return r;
 }
 
 Ast *mkZero() {
-    Ast *r = malloc(BASE_SIZE);
+    Ast *r = new_ast(BASE_SIZE);
     r->type = TBase;
-    r->len = BASE_SIZE;
     r->base->type = BZeroTens;
     return r;
 }
 
 Ast *mkLit(const int n, const int *shape, double *x) {
-    Ast *r = malloc(T_SIZE(n));
+    Ast *r = new_ast(T_SIZE(n));
+    int i;
 
     r->type  = TBase;
-    r->len   = BASE_SIZE;
     r->base->type = BTens;
     r->base->t->n = n;
     r->base->t->x = x;
+    r->base->t->len = 1;
+    for(i=0; i<n; i++) {
+        r->base->t->len *= shape[i];
+    }
     memcpy(r->base->t->shape, shape, sizeof(int)*n);
+    return r;
+}
+
+Ast *mkRand(Slice shape) {
+    Ast *r = mkLit(shape->n, (int *)shape->x, NULL);
+    int len = r->base->t->len;
+    double *x = malloc(sizeof(double)*len);
+    int two = 2;
+    int seed[4] = {4, 13, 28, 47};
+
+    r->base->t->x = x; // fill with random numbers.
+    dlarnv_(&two, seed, &len, x);
+
     return r;
 }
 

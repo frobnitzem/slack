@@ -7,15 +7,21 @@
 # all the dependencies and recompiles on source changes,
 # which was the original idea anyway.
 
+QUARK=$(HOME)/build/quark-0.9.0
+
 CC=gcc
 LD=gcc
 #CFLAGS=-ggdb -I$(PWD)/include
 CFLAGS=-ggdb -I/sw/include -I$(PWD)/include
 #CFLAGS += -DYYDEBUG
 #CFLAGS += $(shell pkg-config gnutls --cflags) -DSRCDIR=$(PWD)
+CFLAGS += -I$(QUARK)
+
 #LDFLAGS=-lixp -lpthread -rdynamic -ldl
 LDFLAGS=-L/sw/lib -lpthread -ldl -ltbb
 #LDFLAGS += $(shell pkg-config gnutls --libs)
+LDFLAGS += -L$(QUARK) -lquark
+LDFLAGS += -framework Accelerate
 
 BIN_OBJ=$(PWD)/bin/tce2.o
 LIB=$(PWD)/lib/libtce2.a

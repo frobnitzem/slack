@@ -25,11 +25,11 @@ void memspace_dtor(MemSpace **mem);
 // void *x is the location of the allocated memory block (key for MemSpace.m).
 void *reserve_block(MemSpace *mem, size_t sz, int nref);
 void insert_unmanaged(MemSpace *mem, void *buf, size_t sz);
-void *uniq_block(MemSpace *mem, void *x, ssize_t sz);
+void *uniq_block(MemSpace *mem, void *x, ssize_t sz, const int nref);
 
 void release_block(MemSpace *mem, void *x);
 // This will release an additional pointer (e.g. a header str.)
 // if x's refcount drops to 0.
-void release_block_if(MemSpace *mem, void *x, void *info);
+void release_block_if(MemSpace *mem, void *x, void **info);
 
 #endif

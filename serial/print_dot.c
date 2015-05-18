@@ -64,7 +64,7 @@ static void show_dot_node(FILE *f, Ast *a, int rank) {
                    "\"%p\" -> \"%p\" [taillabel=\"%.1f\"];\n", rank,
                        a, a->add->a, a->add->alpha);
         fprintf(f, "\"%p\" -> \"%p\" [taillabel=\"%.1f\" label=\"",
-                       a, a->add->b, a->add->alpha);
+                       a, a->add->b, a->add->beta);
         write_list(f, a->add->n, a->add->pb);
         fprintf(f, "\"];\n");
         return;

@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
     FILE *f;
     SMap *defs;
     int n;
-    Ast **a;
+    Ast *a;
 
     if(argc != 2) {
         usage();
@@ -53,6 +53,25 @@ int main(int argc, char *argv[]) {
         n = smap_iter(defs, show_assign, NULL);
         printf("Total assignments = %d\n", n);
     }
+
+    // execute dag
+    if( (a = smap_get(defs, "R")) != NULL) {
+        Tensor *t;
+        MemSpace *mem = memspace_ctor(32, 1<<30); // 1 Gb
+        if(mem == NULL) {
+            printf("Error constructing memspace.\n");
+            return 1;
+        }
+        if( (t = run_quark(a, mem, defs)) == NULL) {
+            printf("Error executing dag.\n");
+            return 1;
+        }
+        printf("Result = \n");
+        print_tens(stdout, t);
+        printf("Used mem = %lu\n", mem->used);
+        memspace_dtor(&mem);
+    }
+
     smap_dtor(&defs);
  
     return 0;

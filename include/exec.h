@@ -2,14 +2,13 @@
 #define _EXEC_H
 
 #include <stdint.h>
-#include <lib/slice.h>
-#include <lib/smap.h>
-
-#include "tens.h"
 
 // This operates between blocks
 //void *exec_ast(Ast *op, int n, void **arg);
 
+Tensor *run_quark(Ast *a, MemSpace *mem, SMap *named);
+
+/*
 extern void magma_sgemm(
     int transA, int transB,
     int m, int n, int k,
@@ -36,6 +35,9 @@ void magma_saxpy(
     float alpha,
     float *dx, int incx,
     float *dy, int incy);
+*/
+
+void dlarnv_(const int *, const int *, const int *, double *);
 
 // C-style function interfaces with traditonal Fortran addressing.
 // For definitions, see "magma-1.6.1/include/magmablas_s.h"
@@ -45,5 +47,6 @@ void magma_saxpy(
 #define COPY  magma_scopy
 #define SCAL  magma_sscal
 #define AXPY  magma_saxpy
+#define LARNV dlarnv_
 
 #endif

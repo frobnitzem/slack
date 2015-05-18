@@ -11,9 +11,9 @@
 %token <str> STRING
 %token <i> INT
 %token <f> FLOAT
-%token EOL SUM
+%token EOL SUM RAND
 
-%type <sl> indices ck_indices ind indlist
+%type <sl> indices ck_indices ind indlist intlist
 %type <a>  assign term factor mfactor contraction literal
 %type <ui> index
 %type <f>  expr
@@ -112,8 +112,15 @@ mfactor: expr factor { $2->scale *= $1; $$ = $2; }
 
 factor: contraction                 { $$ = $1; }
       | literal                     { $$ = $1; }
+      | RAND indices '(' intlist ')'        { $$ = mkActive(mkRand($4), $2); }
+      | RAND indices '(' intlist INT ')'    { $$ = mkActive(
+                    mkRand(slice_append($4, &$5, 1)), $2); }
       | '(' term ')'                { $$ = $2; }
       ;
+
+intlist: INT ','                    { $$ = slice_ctor(sizeof(int), 1, 4);
+                                      *(int *)$$->x = $1; }
+       | intlist INT ','            { $$ = slice_append($1, &$2, 1); }
 
 contraction: SUM indices factor factor {
                Slice act; // [index codes]

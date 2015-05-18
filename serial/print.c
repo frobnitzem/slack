@@ -36,6 +36,35 @@ void display_ind2(FILE *f, int n, uint8_t *x) {
     fprintf(f, "(%u,%u)]", x[0], x[1]);
 }
 
+// write out the last nd dims of tens, starting from x
+static void display_tens(FILE *f, const Tensor *t, const double *x, const int nd) {
+    int i, n;
+
+    if(nd == t->n) {
+        fprintf(f, "%.6f", *x);
+    } else if(nd == t->n-1) { // optimization
+        n = t->shape[nd];
+        for(i=0; i<n-1; i++,x++) {
+            fprintf(f, "%.6f ", *x);
+        }
+        fprintf(f, "%.6f", *x);
+    } else {
+        int stride=1;
+        n = t->shape[nd];
+        for(i=nd+1; i<t->n; i++)
+            stride *= t->shape[i];
+
+        for(i=0; i<n; i++,x += stride) {
+            display_tens(f, t, x, nd+1);
+            printf("\n");
+        }
+    }
+}
+
+void print_tens(FILE *f, const Tensor *t) {
+    display_tens(f, t, t->x, 0);
+}
+
 void display_ast(FILE *f, Ast *a, int pri) {
     switch(a->type) {
     case TAdd:
@@ -89,8 +118,12 @@ void display_ast(FILE *f, Ast *a, int pri) {
     case TBase:
         if(a->base->type == BZeroTens) {
             fprintf(f, "Zero");
-            break;
+        } else if(a->base->type == BTens) {
+            print_tens(f, a->base->t);
+        } else {
+            fprintf(f, "(invalid Base type %d)", a->base->type);
         }
+        break;
     default:
         fprintf(f, "(invalid Ast type %d)", a->type);
     }

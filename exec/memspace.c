@@ -154,14 +154,15 @@ void insert_unmanaged(MemSpace *mem, void *buf, size_t sz) {
  * sz is a quick optimization in case you don't need to
  * copy the whole block.  It's usually a good idea.
  * 
- * If sz < 0, the whole block will be copied.
+ * If sz < 0, the used part of the whole block will be copied.
  *
  * The caller can tell if x was duplicated, since a more differenter
  * pointer will be returned.
  *
  */
-void *uniq_block(MemSpace *mem, void *x, ssize_t sz) {
+void *uniq_block(MemSpace *mem, void *x, ssize_t sz, const int nref) {
     struct Block *b;
+    void *y;
 
     elock(mem->lock);
     if( (b = map_get(mem->m, &x)) == NULL) {
@@ -179,7 +180,7 @@ void *uniq_block(MemSpace *mem, void *x, ssize_t sz) {
         sz = b->used;
 
     // need to copy.
-    void *y = reserve_block(mem, sz, 1);
+    y = reserve_block(mem, b->used, nref);
     memcpy(y, x, sz);
     b->nref--; // decrement refcount
     eunlock(b->lock);
@@ -189,12 +190,13 @@ void *uniq_block(MemSpace *mem, void *x, ssize_t sz) {
 
 // Release block (note this must be called multiple times if nref > 1)
 // It also frees 'info' if the block is left unreferenced.
-void release_block_if(MemSpace *mem, void *x, void *info) {
+void release_block_if(MemSpace *mem, void *x, void **info) {
     int n = -1;
     struct Block *b;
     elock(mem->lock);
-    if( (b = map_get(mem->m, x)) == NULL) {
+    if( (b = map_get(mem->m, &x)) == NULL) {
         fprintf(stderr, "Error! Memory at %p is unknown to MemSpace.\n", x);
+        eunlock(mem->lock);
         return;
     }
     eunlock(mem->lock);
@@ -209,7 +211,8 @@ void release_block_if(MemSpace *mem, void *x, void *info) {
         fprintf(stderr, "Double-free of managed block %p of"
                         " sz %lu (%lu used)!\n", x, b->sz, b->used);
     } else if(n == 1 && info != NULL) {
-        free(info); // Hack the planet!
+        free(*info); // Hack the planet!
+        *info = NULL;
     }
 }
 

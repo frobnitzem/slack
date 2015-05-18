@@ -22,13 +22,13 @@ Tensor *mkTensor(int nd, int *shape, int nref, void *m);
 Tensor *toTensor(double *x, int nd, int *shape, void *m);
 */
 
-Tensor *uniq_tens(MemSpace *, Tensor *);
-
-Tensor *tensor_ctor(int nd, int *shape);
+Tensor *tensor_ctor(const int nd, const int *shape);
 void tensor_dtor(Tensor **t, MemSpace *mem);
-Tensor *mkTensor(int nd, int *shape, int nref, MemSpace *mem);
-Tensor *toTensor(double *x, int nd, int *shape, MemSpace *mem);
-Tensor *uniq_tens(MemSpace *, Tensor *);
+Tensor *mkTensor(const int nd, const int *shape, const int nref, MemSpace *mem);
+Tensor *toTensor(double *x, const int nd, const int *shape, MemSpace *mem);
+Tensor *newTensor(const int nd, const int *shape,
+                  const int nref, MemSpace *mem);
+Tensor *uniq_tens(MemSpace *, Tensor *, const int nref);
 
 //Tensor *tensdot(Tensor *a, Tensor *b, int nc, int *ind, int nref, Slice *m);
 // These just wrap tensadd, tensdot, DSCAL

@@ -8,7 +8,7 @@
 
 //int tce2_debug = 1;
 
-static int find_index(uint8_t u, Slice a);
+static uint8_t find_index(uint8_t u, Slice a);
 
 SMap *tce2_parse_inp(struct Environ *e, FILE *f) {
     struct Lexer_Context ctxt = {
@@ -80,7 +80,7 @@ uint8_t *get_perm(Slice ind, Slice out, int *is_ord) {
     uint8_t *perm = malloc(out->n);
 
     for(i=0; i<out->n; i++) {
-        if( (perm[i] = find_index(dim[i], ind)) < 0) {
+        if( (perm[i] = find_index(dim[i], ind)) == 255) {
             fprintf(stderr, "Error! index %d not "
                             "found in input tensor.\n", dim[i]);
             free(perm);
@@ -121,11 +121,11 @@ int partition_inds(Slice *cc_p, Slice *ctr_p, Slice csum, Slice ca, Slice cb) {
     // Create ctr by traversing csum
     ind = csum->x;
     for(i=0; i<csum->n; i++) {
-        if( (ctr[0] = find_index(ind[i], ca)) < 0) {
+        if( (ctr[0] = find_index(ind[i], ca)) == 255) {
             fprintf(stderr, "Contraction index %d not found in A.\n", ind[i]);
             return -1;
         }
-        if( (ctr[1] = find_index(ind[i], cb)) < 0) {
+        if( (ctr[1] = find_index(ind[i], cb)) == 255) {
             fprintf(stderr, "Contraction index %d not found in B.\n", ind[i]);
             return -1;
         }
@@ -136,13 +136,13 @@ int partition_inds(Slice *cc_p, Slice *ctr_p, Slice csum, Slice ca, Slice cb) {
     j = 0;
     ind = ca->x;
     for(i=0; i<ca->n; i++) {
-        if(find_index(ind[i], csum) < 0) {
+        if(find_index(ind[i], csum) == 255) {
             cc[j++] = ind[i];
         }
     }
     ind = cb->x;
     for(i=0; i<cb->n; i++) {
-        if(find_index(ind[i], csum) < 0) {
+        if(find_index(ind[i], csum) == 255) {
             cc[j++] = ind[i];
             for(k=0; k<ca->n - csum->n; k++) { // Check overlap.
                 if(cc[k] == ind[i]) {
@@ -161,13 +161,13 @@ int partition_inds(Slice *cc_p, Slice *ctr_p, Slice csum, Slice ca, Slice cb) {
     return csum->n;
 }
 
-static int find_index(uint8_t u, Slice a) {
+static uint8_t find_index(uint8_t u, Slice a) {
     uint8_t *x = a->x;
     int i;
     for(i=0; i<a->n; i++) {
         if(x[i] == u) return i;
     }
-    return -1;
+    return 255;
 }
 
 // Returns nonzero if the slice (of uint8_t) contains a duplicated number.
