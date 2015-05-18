@@ -50,9 +50,6 @@ struct Base {
 struct Ast_s {
     enum AstType type;
     uint32_t len;
-    // the following two are for in-tree execution
-    Tensor *val; // pointer to node output
-    int nref;    // number of references to node.
 
     union {
         struct Base   base[0];
@@ -75,6 +72,7 @@ struct Environ {
     int debuglevel;
 };
 
+Ast *simpScale(double alpha, Ast *a);
 Ast *mkScale(const double, Ast *);
 Ast *simpAdd(const double alpha, Ast *a,
              const double beta,  Ast *b, const int n, const uint8_t *pb);

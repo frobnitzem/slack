@@ -7,9 +7,35 @@ void print_vec(int *x, int n);
 Ast *new_ast(size_t len) {
     Ast *r = malloc(len);
     r->len = len;
-    r->val = NULL;
-    r->nref = 0;
     return r;
+}
+
+Ast *simpScale(double alpha, Ast *a) {
+    if(alpha == 1.0)
+        return a;
+
+    switch(a->type) {
+    case TRef:
+        break;
+    case TBase:
+        if(a->base->type == BZeroTens) {
+            return a;
+        }
+        break;
+    case TScale: // Don't need to recurse if tree was made of simpScale.
+        a->scale->alpha *= alpha;
+        return a;
+    case TAdd:
+        a->add->alpha *= alpha;
+        a->add->beta  *= alpha;
+        return a;
+    case TDot:
+        a->dot->alpha *= alpha;
+        a->dot->beta  *= alpha;
+        return a;
+    }
+    // give up.
+    return mkScale(alpha, a);
 }
 
 Ast *mkScale(double alpha, Ast *a) {
@@ -37,36 +63,70 @@ Ast *simpAdd(const double alpha, Ast *a,
     uint8_t *perm;
 
     if(isZero(b))
-        return a;
+        return simpScale(alpha, a);
     if(isZero(a)) {
         if(isId(n, pb)) {
+            return simpScale(beta, b);
+        }
+        // Push transpose down.
+        switch(b->type) {
+        case TRef:
+            break;
+        case TBase:
+            if(b->base->type == BZeroTens) {
+                return b; // permutation is unimportant
+            }
+            break;
+        case TAdd:
+            // generic solution.  Note that if b->add->a
+            // still has a transpose, it is inevitable (unless the
+            // new combination is id)
+            if(isZero(b->add->a)) {
+            // beta (a 0 + b B^T)^T -> beta b B^T^T
+                compose_permut(b->add->n, b->add->pb, n, pb);
+                return mkTranspose(beta * b->add->beta, b->add->b,
+                                   b->add->n, b->add->pb);
+            }
+            // beta (a A + b B^T)^T -> beta a A^T + beta b B^T^T
+            b->add->alpha *= beta;
+            b->add->beta  *= beta;
+            b->add->a = mkTranspose(1.0, b->add->a, n, pb);
+            compose_permut(b->add->n, b->add->pb, n, pb);
             return b;
+        case TDot: // beta (a A.B + b C)^T -> a beta (A.B)^T + b beta C^T
+            b->dot->alpha *= beta;
+            b->dot->beta  *= beta;
+            compose_permut(b->dot->na, b->dot->pa, n, pb);
+            compose_permut(b->dot->nb, b->dot->pb, n, pb);
+            b->dot->c = mkTranspose(1.0, b->dot->c, n, pb);
+            return b;
+        case TScale: // Scale would have been simplified already if
+                     // we could push the transpose.
+            break;
         }
-        if(b->type == TAdd) {
-            // TODO -- check for Zero in b.
-        }
+        // give up.
+        return mkAdd(0.0, mkZero(), beta, b, n, pb);
     }
+
+    // Neither A nor B are zero
+    // alpha A + beta (a AA . AB + 0)^T
+    //  -> a beta (AA . AB)^T + alpha A
     if(b->type == TDot && isZero(b->dot->c)) { // FMA case
         // reorder output indices of b->dot to match a
-        perm = inv_permut(n, pb);
-        compose_permut(b->dot->na, b->dot->pa, n, perm);
-        compose_permut(b->dot->nb, b->dot->pb, n, perm);
-        free(perm);
+        compose_permut(b->dot->na, b->dot->pa, n, pb);
+        compose_permut(b->dot->nb, b->dot->pb, n, pb);
         b->dot->alpha *= beta;
         b->dot->beta = alpha;
         b->dot->c = a;
         return b;
     }
-    if(a->type == TDot && isZero(a->dot->c)) { // FMA case
-        // reorder output indices of a->dot to match b
-        compose_permut(a->dot->na, a->dot->pa, n, pb);
-        compose_permut(a->dot->nb, a->dot->pb, n, pb);
+    // alpha (a AA . AB + 0) + beta B^T
+    //  -> a alpha (AA . AB) + beta B^T
+    if(a->type == TDot && isZero(a->dot->c)) {
         a->dot->alpha *= alpha;
         a->dot->beta = beta;
-        a->dot->c = b;
-        // transpose final result
-        //return mkTranspose(1.0, a, n, pb);
-        return mkAdd(0.0, mkZero(), 1.0, a, n, pb);
+        a->dot->c = mkTranspose(1.0, b, n, pb);
+        return a;
     }
 
     // default

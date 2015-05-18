@@ -133,7 +133,10 @@ Tensor *uniq_tens(MemSpace *mem, Tensor *t, const int nref) {
     return u;
 }
 
-// Compose the two permutations (each of elements 0 .. m or 0 .. (m-1).
+// Compose permutation perm after x, storing the result in x.
+//
+// The first, x, is moved forward according to the second, perm.
+// Indices from x in the range [n, m) are left alone.
 void compose_permut(const int m, uint8_t *x, const int n, const uint8_t *perm) {
     int i;
     for(i=0; i<m; i++) {

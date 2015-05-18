@@ -33,19 +33,19 @@ def dbl_fn(a, *args):
         decl_fn(a, *(args+(c_double,)))
 # Building up data types used
 intarr = ct.ndpointer(dtype=np.int32, flags='C_CONTIGUOUS')
+inds   = ct.ndpointer(dtype=np.uint8, flags='C_CONTIGUOUS')
 dblarr = ct.ndpointer(dtype=np.float64, flags='C_CONTIGUOUS')
 
-
-
-void_fn(dw.tensdot, c_double, dblarr, c_int32, intarr, intarr,
-                                dblarr, c_int32, intarr, intarr,
+void_fn(dw.tensdot, c_double, dblarr, c_int32, intarr, inds,
+                                dblarr, c_int32, intarr, inds,
                       c_double, dblarr, c_int32)
 
 def tdot(alpha, A, pa, B, pb, beta, C):
-    dw.tensdot(alpha,
-       A, len(A.shape), array(A.shape, dtype=np.int32), pa.astype(np.int32),
-       B, len(B.shape), array(B.shape, dtype=np.int32), pb.astype(np.int32),
-                 beta, C, len(C.shape))
+    dw.tensdot(alpha, A, len(A.shape), array(A.shape, dtype=np.int32),
+                                       pa.astype(np.uint8),
+                      B, len(B.shape), array(B.shape, dtype=np.int32),
+                                       pb.astype(np.uint8),
+                beta, C, len(C.shape))
 
 def test_sz(sa, pa, sb, pb, nc):
     print "  ==  Test", sa, pa, sb, pb, nc, "=="

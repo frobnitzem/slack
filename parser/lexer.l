@@ -68,18 +68,20 @@ UAL3 (\xe0(\xa0[\x80-\x95\x9a\xa4\xa8]|\xa1[\x80-\x98]|\xa2[\xa0\xa2-\xac]|\xa4[
 "," |
 "="  	{ return yytext[0]; }
 "&" |
-"\\\\" |
 "\\left" |
 "\\right" { /* ignore formatting characters */ }
 "\\sum"  { return SUM; }
 "rand"   { return RAND; }
+"zero"   { return ZERO; }
 "{" |
 "("	{ yyextra->nest += 1; return yytext[0]; }
 "["     { yyextra->nest += 1; return '('; }
 "}" |
 ")"	{ yyextra->nest -= 1; return yytext[0]; }
 "]"     { yyextra->nest -= 1; return ')'; }
-\n({UWS}*\n)* { if(yyextra->nest <= 0) {yyextra->nest = 0; return EOL;} }
+ /*\n({UWS}*\n)* { if(yyextra->nest <= 0) {yyextra->nest = 0; return EOL;} } */
+\n({UWS}*\n)* { if(yyextra->nest <= 0) { yyextra->nest = 0; } }
+"\\\\"  { return EOL; }
 {UWS}   { /* ignore whitespace */ }
 
  /* comments */

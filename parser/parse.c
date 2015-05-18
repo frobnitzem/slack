@@ -65,7 +65,7 @@ Ast *ck_transpose(struct active *act, Slice ind) {
     if(!ord) {
         r = mkTranspose(act->scale, act->a, ind->n, perm);
     } else if(act->scale != 1.0) {
-        r = mkScale(act->scale, act->a);
+        r = simpScale(act->scale, act->a);
     } else {
         r = act->a;
     }
@@ -76,12 +76,12 @@ Ast *ck_transpose(struct active *act, Slice ind) {
 
 uint8_t *get_perm(Slice ind, Slice out, int *is_ord) {
     int i, ord=1;
-    uint8_t *dim = out->x;
-    uint8_t *perm = malloc(out->n);
+    uint8_t *dim = ind->x;
+    uint8_t *perm = malloc(ind->n);
 
-    for(i=0; i<out->n; i++) {
-        if( (perm[i] = find_index(dim[i], ind)) == 255) {
-            fprintf(stderr, "Error! index %d not "
+    for(i=0; i<ind->n; i++) {
+        if( (perm[i] = find_index(dim[i], out)) == 255) {
+            fprintf(stderr, "Error! outex %d not "
                             "found in input tensor.\n", dim[i]);
             free(perm);
             return NULL;

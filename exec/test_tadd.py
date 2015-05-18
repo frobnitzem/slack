@@ -33,24 +33,23 @@ def dbl_fn(a, *args):
         decl_fn(a, *(args+(c_double,)))
 # Building up data types used
 intarr = ct.ndpointer(dtype=np.int32, flags='C_CONTIGUOUS')
+inds   = ct.ndpointer(dtype=np.uint8, flags='C_CONTIGUOUS')
 dblarr = ct.ndpointer(dtype=np.float64, flags='C_CONTIGUOUS')
 
-
-
 void_fn(dw.tensadd, c_double, dblarr, c_int32, intarr,
-                    c_double, dblarr, intarr)
+                    c_double, dblarr, inds)
 
 def tadd(alpha, A, beta, B, perm):
     assert len(A.shape) == len(B.shape) and np.prod(A.shape) == np.prod(B.shape)
     dw.tensadd(alpha, A, len(A.shape), array(A.shape, dtype=np.int32),
-               beta,  B, array(perm, dtype=np.int32))
+               beta,  B, array(perm, dtype=np.uint8))
 
 def test_sz(sa, perm):
     print "  ==  Test", sa, perm, "=="
     A = rand(sa)
-    B = rand(permut(inv_perm(perm), sa))
+    B = rand(permut(perm, sa))
 
-    Ap = 1.0*A + 2.0*np.transpose(B, perm)
+    Ap = 1.0*A + 2.0*np.transpose(B, inv_perm(perm))
     tadd(1.0, A, 2.0, B, perm)
     if not np.allclose(A, Ap):
         print "Mismatch!"

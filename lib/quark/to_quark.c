@@ -92,8 +92,8 @@ int *get_dot_shape(struct Dot *dot, Tensor *a, Tensor *b) {
 int *get_add_shape(struct Add *add, Tensor *b) {
     int *sz = malloc(sizeof(int)*add->n);
     int i;
-    for(i=0; i<add->n; i++) { // add perm
-        sz[i] = b->shape[add->pb[i]];
+    for(i=0; i<add->n; i++) {
+        sz[add->pb[i]] = b->shape[i];
     }
     return sz;
 }
@@ -303,7 +303,6 @@ static struct Node *zip_ast_rec(Ast *a, SMap *defs, Map *out) {
         return n;
     }
 
-    printf("Blocking Node %p\n", a);
     map_put(out, &a, out); // insert bad ref to detect cycles
 
     if(a->type == TRef) {
@@ -315,7 +314,6 @@ static struct Node *zip_ast_rec(Ast *a, SMap *defs, Map *out) {
         if( (n = zip_ast_rec(b, defs, out)) == NULL) {
             return NULL;
         }
-        printf("Placing Ref %s (node %p)\n", a->ref, a);
         map_put(out, &a, n);
         return n;
     }
@@ -326,7 +324,6 @@ static struct Node *zip_ast_rec(Ast *a, SMap *defs, Map *out) {
         }
     }
 
-    printf("Placing node %p\n", a);
     n = node_ctor(a, 1);
     map_put(out, &a, n);
     return n;

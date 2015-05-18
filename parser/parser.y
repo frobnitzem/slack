@@ -11,10 +11,10 @@
 %token <str> STRING
 %token <i> INT
 %token <f> FLOAT
-%token EOL SUM RAND
+%token EOL SUM RAND ZERO
 
 %type <sl> indices ck_indices ind indlist intlist
-%type <a>  assign term factor mfactor contraction literal
+%type <a>  assign term rand zero factor mfactor contraction literal
 %type <ui> index
 %type <f>  expr
 
@@ -46,8 +46,8 @@
  /* Tensor contraction expression grammar. */
 
 statements: /* empty */             { }
-          | eols                    { }
-          | statements assign eols  { }
+          | assign                  { }
+          | statements eols assign  { }
           ;
 
 eols: eols EOL
@@ -68,9 +68,10 @@ assign: literal '=' term            { if(smap_put(context->ret,
 
 expr: INT                            { $$ = (double)$1; }
     | FLOAT                          { $$ = $1; }
+    | '-'                            { $$ = -1.0; }
+    | '-' INT                        { $$ = -1.0*$2; }
+    | '-' FLOAT                      { $$ = -1.0*$2; }
     ;
-
-
 
  /* Use the order from the first arg. to +/- */
 term: term '+' mfactor               { int ord;
@@ -81,8 +82,8 @@ term: term '+' mfactor               { int ord;
                    exit(1);
                                        }
                                        $1->a = simpAdd($1->scale, $1->a,
-                                                     $3->scale, $3->a,
-                                                     $1->ind->n, perm);
+                                                       $3->scale, $3->a,
+                                                       $1->ind->n, perm);
                                        free(perm);
                                        $$ = $1;
                                        $$->scale = 1.0;
@@ -96,8 +97,8 @@ term: term '+' mfactor               { int ord;
                    exit(1);
                                        }
                                        $1->a = simpAdd($1->scale, $1->a,
-                                               (-1.)*$3->scale, $3->a,
-                                                     $1->ind->n, perm);
+                                                 (-1.)*$3->scale, $3->a,
+                                                       $1->ind->n, perm);
                                        free(perm);
                                        $$ = $1;
                                        $$->scale = 1.0;
@@ -106,17 +107,36 @@ term: term '+' mfactor               { int ord;
     | mfactor                        { $$ = $1; }
     ;
 
-mfactor: expr factor { $2->scale *= $1; $$ = $2; }
-       | factor { $$ = $1; }
+mfactor: expr factor                { $$ = $2; $$->scale *= $1; }
+       | factor                     { $$ = $1; }
        ;
 
 factor: contraction                 { $$ = $1; }
       | literal                     { $$ = $1; }
-      | RAND indices '(' intlist ')'        { $$ = mkActive(mkRand($4), $2); }
-      | RAND indices '(' intlist INT ')'    { $$ = mkActive(
-                    mkRand(slice_append($4, &$5, 1)), $2); }
+      | rand                        { $$ = $1; }
+      | zero                        { $$ = $1; }
       | '(' term ')'                { $$ = $2; }
       ;
+
+rand: RAND '(' intlist ')'          { tce2_error(&yyloc, NULL,
+      "Rand needs explicit indices, e.g. rand_{ij} (4,4)\n");
+      exit(1);
+      }
+    | RAND '(' intlist INT ')'      { tce2_error(&yyloc, NULL,
+      "Rand needs explicit indices, e.g. rand_{ij} (4,4)\n");
+      exit(1);
+      }
+    | RAND indices '(' intlist ')'        { $$ = mkActive(mkRand($4), $2); }
+    | RAND indices '(' intlist INT ')'    { $$ = mkActive(
+                    mkRand(slice_append($4, &$5, 1)), $2); }
+    ;
+
+zero: ZERO indices                  { $$ = mkActive(mkZero(), $2); }
+    | ZERO                          { tce2_error(&yyloc, NULL,
+      "zero needs explicit indices, e.g. zero_{ij}\n");
+      exit(1);
+      }
+    ;
 
 intlist: INT ','                    { $$ = slice_ctor(sizeof(int), 1, 4);
                                       *(int *)$$->x = $1; }
@@ -127,7 +147,7 @@ contraction: SUM indices factor factor {
                Slice ctr; // [(dim,dim)]
                if(partition_inds(&act, &ctr, $2, $3->ind, $4->ind) < 0) {
                    tce2_error(&yylloc, NULL, "Bad contraction!\n");
-                   exit(1); // as if that wasn't fatal enough!
+                   exit(1);
                }
                $$ = mkActive(mkTensDot($3->scale*$4->scale,
                                        $3->a, $3->ind->n,
@@ -172,7 +192,7 @@ index: CHAR {  uint8_t ind = (uint8_t) smap_get(context->ind_map, $1);
                if(!ind) {
                    if(context->nindices >= 255) {
                        tce2_error(&yylloc, NULL, "Overflowed 255 available indices!\n");
-                       exit(1); // as if that wasn't fatal enough!
+                       exit(1);
                    }
                    ind = ++context->nindices;
                    smap_put(context->ind_map, $1, (void *)ind);
