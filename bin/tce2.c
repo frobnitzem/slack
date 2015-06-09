@@ -14,7 +14,7 @@
 
 
 #define usage() { \
-    fprintf(stderr, "usage: %1$s line.tex\n", argv[0]); \
+    fprintf(stderr, "usage: %1$s [-v] [-n 1] line.tex\n", name); \
     exit(1); \
 }
 
@@ -31,44 +31,61 @@ static void show_assign(const char *key, void *value, void *ignored) {
 
 int main(int argc, char *argv[]) {
     struct Environ e = {
-        .debuglevel = 1,
+        .debuglevel = 0,
     };
+    char *name = argv[0];
     FILE *f;
     SMap *defs;
-    int n;
+    int n, nthreads=0;
     Ast *a;
 
-    if(argc != 2) {
-        usage();
+    while(1) {
+        if(argc < 2) {
+            usage();
+        }
+        if(!strcmp(argv[1], "-v")) {
+            e.debuglevel = 1;
+            argv++;
+        } else if(!strcmp(argv[1], "-n")) {
+            nthreads = atoi(argv[2]);
+            argv += 2;
+        }
+        break;
     }
 
     if( (f = fopen(argv[1], "r")) == NULL) {
-            perror("Error opening file");
-            return -1;
+        perror("Error opening file");
+        return -1;
     }
 
     if( (defs = tce2_parse_inp(&e, f)) == NULL) {
         printf("bad parse.\n");
-    } else {
+    } else if(e.debuglevel) {
         n = smap_iter(defs, show_assign, NULL);
         printf("Total assignments = %d\n", n);
     }
 
     // execute dag
-    if( (a = smap_get(defs, "R")) != NULL) {
+    if( (a = smap_get(defs, "result")) != NULL) {
         Tensor *t;
         MemSpace *mem = memspace_ctor(32, 1<<30); // 1 Gb
+        //MemSpace *mem = memspace_ctor(32, 35976/2);
         if(mem == NULL) {
             printf("Error constructing memspace.\n");
             return 1;
         }
-        if( (t = run_quark(a, mem, defs)) == NULL) {
+        for(n=0; n<10; n++) {
+          if( (t = run_quark(a, nthreads, mem, defs)) == NULL) {
             printf("Error executing dag.\n");
             return 1;
+          }
+          if(e.debuglevel) {
+            printf("Result = \n");
+            print_tens(stdout, t);
+          }
+          printf("Used mem = %lu\n", mem->used);
+          tensor_dtor(&t, mem);
         }
-        printf("Result = \n");
-        print_tens(stdout, t);
-        printf("Used mem = %lu\n", mem->used);
         memspace_dtor(&mem);
     }
 

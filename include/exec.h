@@ -6,7 +6,7 @@
 // This operates between blocks
 //void *exec_ast(Ast *op, int n, void **arg);
 
-Tensor *run_quark(Ast *a, MemSpace *mem, SMap *named);
+Tensor *run_quark(Ast *a, int nthreads, MemSpace *mem, SMap *named);
 
 /*
 extern void magma_sgemm(

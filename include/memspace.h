@@ -15,8 +15,11 @@ struct Block {
 typedef struct {
     Map *m; // Map (void *) (struct Block *)
     pthread_mutex_t lock;
+    pthread_cond_t avail;
     size_t max; // max-space
     size_t used; // total used space
+    struct Block *recent; // set when avail is signalled
+    void *recent_x;
 } MemSpace;
 
 MemSpace *memspace_ctor(int, size_t max);

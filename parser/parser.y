@@ -13,7 +13,7 @@
 %token <f> FLOAT
 %token EOL SUM RAND ZERO
 
-%type <sl> indices ck_indices ind indlist intlist
+%type <sl> indices ck_indices ind indlist intlist tuple
 %type <a>  assign term rand zero factor mfactor contraction literal
 %type <ui> index
 %type <f>  expr
@@ -116,6 +116,8 @@ factor: contraction                 { $$ = $1; }
       | rand                        { $$ = $1; }
       | zero                        { $$ = $1; }
       | '(' term ')'                { $$ = $2; }
+      | '(' tuple ')'               { $$ = mkTuple($2); }
+      | '(' tuple term ')'          { $$ = mkTuple(slice_append($2, &$3, 1)); }
       ;
 
 rand: RAND '(' intlist ')'          { tce2_error(&yyloc, NULL,
@@ -141,6 +143,10 @@ zero: ZERO indices                  { $$ = mkActive(mkZero(), $2); }
 intlist: INT ','                    { $$ = slice_ctor(sizeof(int), 1, 4);
                                       *(int *)$$->x = $1; }
        | intlist INT ','            { $$ = slice_append($1, &$2, 1); }
+
+tuple: term ','                  { $$ = slice_ctor(sizeof(int), 1, 2);
+                                      *(int *)$$->x = $1; }
+     | tuple term ','            { $$ = slice_append($1, &$2, 1); }
 
 contraction: SUM indices factor factor {
                Slice act; // [index codes]

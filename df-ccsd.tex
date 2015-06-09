@@ -1,0 +1,57 @@
+"result" &= (R^{ab}_{ij}, "w1"^a_i) \\
+R^{ab}_{ij} &= \sum_Q "Uvo"^Q_{ai} "Uvo"^Q_{bj} + A^{ab}_{ij} + B^{ab}_{ij}
+              + 0.5 C^{ab}_{ij} + 0.5 C^{ba}_{ji}
+              +     C^{ab}_{ji} +     C^{ba}_{ij}
+              + D^{ab}_{ij} + D^{ba}_{ji}
+              + E^{ab}_{ij} + E^{ba}_{ji}
+              + G^{ab}_{ij} + G^{ba}_{ji} \\
+%
+A^{ab}_{ij} &= \sum_{cd} \sum_Q "Uvv"^Q_{ac} "Uvv"^Q_{bd} t^{cd}_{ij} \\
+%
+B^{ab}_{ij} &= \sum_{kl} \left( \sum_Q "Uoo"^Q_{ki} "Uoo"^Q_{lj}
+                              + \sum_{cd} V_{kcld} t^{cd}_{ij}
+                         \right) t^{ab}_{kl} \\
+%
+C^{ab}_{ij} &= -\sum_{kc} \left(
+                        \sum_Q "Uoo"^Q_{ki} "Uvv"^Q_{ac}
+                        - 0.5 \sum_{ld} V_{kdlc} t^{ad}_{li}
+                                     \right) t^{bc}_{kj} \\
+%
+D^{ab}_{ij} &= 0.5 \sum_{kc} \left( "Lv"_{aikc} +
+                                    0.5 \sum_{ld} "Lo"_{ldkc} u^{ad}_{il}
+                             \right) u^{bc}_{jk} \\
+%
+E^{ab}_{ij} &= \sum_c \left( "Fab"_{bc} - \sum_{kld} V_{ldkc} u^{bd}_{kl}
+                      \right) t^{ac}_{ij} \\
+%
+G^{ab}_{ij} &= -\sum_k \left("Fij"_{kj} + \sum_{lcd} V_{kdlc} u^{cd}_{lj}
+                      \right) t^{ab}_{ik} \\
+% The second term has an incorrect '-' sign in the manuscript.
+%G^{ab}_{ij} &= -\sum_k \left("Fij"_{kj} - \sum_{lcd}\sum_Q "Uov"^Q_{kd} "Uov"^Q_{lc}
+%                                                u^{cd}_{lj}
+%                      \right) t^{ab}_{ik} \\
+%
+"Lv"_{aijb} &= 2 \sum_Q "Uvo"^Q_{ai} "Uov"^Q_{jb} - \sum_Q "Uvv"^Q_{ab} "Uoo"^Q_{ji} \\
+"Lo"_{iajb} &= 2 V_{iajb} - V_{ibja} \\
+%
+V_{iajb} &= \sum_Q "Uov"^Q_{ia} "Uov"^Q_{jb} \\
+%
+u^{pq}_{rs} &= 2 t^{pq}_{rs} - t^{qp}_{rs} \\
+%
+% Singles residual
+"w1"^a_i &= "Fai"_{ai} + "A1"^a_i + "B1"^a_i + "C1"^a_i \\
+"A1"^a_i &=  \sum_{dQ} \sum_{kc} u^{cd}_{ki} "Uov"^Q_{kc} "Uvv"^Q_{ad} \\
+"B1"^a_i &= -\sum_{klc} \sum_Q "Uoo"^Q_{ki} "Uov"^Q_{lc} u^{ac}_{kl} \\
+"C1"^a_i &=  \sum_{kc} "Fia"_{kc} u^{ac}_{ik} \\
+%
+% Inputs:
+%
+"Fij"_{ij} = rand_{ij} (4,4) \\
+"Fia"_{ij} = rand_{ij} (4,36) \\
+"Fai"_{ij} = rand_{ij} (36,4) \\
+"Fab"^{ab} = rand^{ab} (36,36) \\
+t^{ab}_{ij} = rand^{ab}_{ij} (36,36,4,4) \\
+"Uoo"_{ij} = rand_{ij} (118,4,4) \\
+"Uvv"^{ab} = rand^{ab} (118,36,36) \\
+"Uov"_{ia} = rand_{ia} (118,4,36) \\
+"Uvo"_{ai} = rand_{ai} (118,36,4)

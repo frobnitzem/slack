@@ -50,10 +50,10 @@ void print_nvec(char *, int *x, int n);
  */
 
 void tensdot(const double alpha,
-             double *A, const int na, const int *sa, const uint8_t *pa,
-             double *B, const int nb, const int *sb, const uint8_t *pb,
+              double *A, const int na, const int *sa, const uint8_t *pa,
+              double *B, const int nb, const int *sb, const uint8_t *pb,
              const double beta,
-             double *C, int nc) {
+              double *C, int nc) {
     if(na > 100 || nb > 100 || nc > na+nb || na < 1 || nb < 1 || nc < 0
             || (na+nb-nc)%2 == 1) {
         printf("whoa there!\n");

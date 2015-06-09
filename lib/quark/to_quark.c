@@ -50,7 +50,7 @@ struct Node {
     int visited;
 };
 
-Tensor *run_quark(Ast *a, MemSpace *mem, SMap *named) {
+Tensor *run_quark(Ast *a, int nthreads, MemSpace *mem, SMap *named) {
     Map *vis;
     Quark *q;
     struct Node *n;
@@ -61,7 +61,7 @@ Tensor *run_quark(Ast *a, MemSpace *mem, SMap *named) {
         return NULL;
     }
 
-    q = QUARK_New(4); // nthreads
+    q = QUARK_New(nthreads);
     add_q(q, n->op, mem, vis); // have to use n->op, in case a->type == TRef
     // to re-run, set all visited = 0, val = NULL
     //QUARK_Barrier(q);
@@ -101,7 +101,7 @@ int *get_add_shape(struct Add *add, Tensor *b) {
 void qalloc_tdot(Quark *q) {
     struct Node *n, *a, *b, *c;
     MemSpace *mem;
-    fprintf(stderr, "qalloc_tdot\n");
+    //fprintf(stderr, "qalloc_tdot\n");
     // macro
     quark_unpack_args_5(q, mem, n, a, b, c);
     if(c->val == NULL) {
@@ -122,7 +122,7 @@ void qrun_tdot(Quark *q) {
     struct Dot *dot;
     MemSpace *mem;
 
-    fprintf(stderr, "qrun_tdot\n");
+    //fprintf(stderr, "qrun_tdot\n");
     quark_unpack_args_4(q, mem, n, a, b);
     dot = n->op->dot;
 
@@ -136,7 +136,7 @@ void qrun_tdot(Quark *q) {
 void qalloc_tadd(Quark *q) {
     struct Node *n, *a, *b;
     MemSpace *mem;
-    fprintf(stderr, "qalloc_tadd\n");
+    //fprintf(stderr, "qalloc_tadd\n");
 
     // macro
     quark_unpack_args_4(q, mem, n, a, b);
@@ -159,7 +159,7 @@ void qrun_tadd(Quark *q) {
     struct Add *add;
     MemSpace *mem;
 
-    fprintf(stderr, "qrun_tadd\n");
+    //fprintf(stderr, "qrun_tadd\n");
 
     quark_unpack_args_3(q, mem, n, b);
     add = n->op->add;
