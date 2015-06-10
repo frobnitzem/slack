@@ -105,7 +105,6 @@ int main(void) {
     return 0;
 }
 
-
 // Wrapper for last-minute planners.
 void tensdot(float alpha, float *A, int na, int *sa, uint8_t *pa,
                           float *B, int nb, int *sb, uint8_t *pb,

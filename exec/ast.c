@@ -11,6 +11,9 @@ Ast *new_ast(size_t len) {
 }
 
 Ast *simpScale(double alpha, Ast *a) {
+#ifdef NOSIMP
+    return mkScale(alpha, a);
+#endif
     if(alpha == 1.0)
         return a;
 
@@ -61,6 +64,9 @@ static int isId(const int n, const uint8_t *perm) {
 Ast *simpAdd(const double alpha, Ast *a,
              const double beta,  Ast *b, const int n, const uint8_t *pb) {
     uint8_t *perm;
+#ifdef NOSIMP
+    return mkAdd(alpha, a, beta, b, n, pb);
+#endif
 
     if(isZero(b))
         return simpScale(alpha, a);
