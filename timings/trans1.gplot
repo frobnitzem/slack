@@ -1,0 +1,1 @@
+plot 'trans1.dat' u 1:($1**4/$2 * 1e-9) w lp 
