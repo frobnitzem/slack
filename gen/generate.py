@@ -222,7 +222,6 @@ def compute_idx(out, idx, n, nws=4):
 # Here, idx = [(tot, Shape, Steps)],
 # and all Shape-s and Steps-s must be length n.
 def compute_idx_shape(out, idx, n, nws=4):
-    print >>sys.stderr, out, idx, n
     ws = "\n"+" "*nws
     blk = []
     #for k in range(n-1,-1,-1):

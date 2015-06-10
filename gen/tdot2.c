@@ -61,7 +61,7 @@ void tdot(struct DotInfo *info, float *A, float *B, float *C) {
     printf("TDOT: %f Gflops\n", 2e-9*info->clen*inner/time);
 }
 
-#define N 32
+#define N 16
 
 int main(void) {
     float *A, *B, *C;
@@ -76,9 +76,9 @@ int main(void) {
     int nb = 2; uint8_t pb[] = {1,0}; int sb[] = {4,3};
     int nc = 1; int sc[] = {3};*/
     // tdot32_32_1_1_16T4_4_1_1A0_2_4B1_3_4
-    int na = 3; uint8_t pa[] = {0,2,4}; int sa[] = {N,1,N};
-    int nb = 3; uint8_t pb[] = {1,3,4}; int sb[] = {N,1,N};
-    int nc = 4;                         int sc[] = {N,N,1,1};
+    int na = 4; uint8_t pa[] = {4,2,0,5}; int sa[] = {8,1,N,8};
+    int nb = 4; uint8_t pb[] = {1,5,4,3}; int sb[] = {1,8,8,N};
+    int nc = 4;                           int sc[] = {N,1,1,N};
 
     struct DotInfo *info = calc_plan(1.0, na, sa, pa,
                                           nb, sb, pb,

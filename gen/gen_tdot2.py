@@ -285,8 +285,8 @@ def gen_tdot(thr_blk, work_blk, pa, pb):
     def end_accum_loops():
         s = ""
         for i in range(n-1, 0, -1):
-            s += "} A -= J%d*sA_stride%d;"%(i, i+nc)
-            s +=  " B -= J%d*sB_stride%d;"%(i, i+nc)
+            s += "} A -= J%d*sA_stride%d;"%(i, pa.index(i+nc))
+            s +=  " B -= J%d*sB_stride%d;"%(i, pb.index(i+nc))
             s += ws
         if n > 0:
             s += "}"
