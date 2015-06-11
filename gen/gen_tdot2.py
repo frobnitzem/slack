@@ -20,9 +20,9 @@ tdot_k%(name)s(%(Cshape)s,
                 float alpha, const float* __restrict__ A,
                              const float* __restrict__ B,
                 float  beta,       float* __restrict__ C) {
-    const int tn = threadIdx.x*blockDim.y + threadIdx.y;
-    int x = blockIdx.x; int y = blockIdx.y;
     const int tx = threadIdx.x; const int ty = threadIdx.y;
+    const int tn = tx*blockDim.y + ty;
+    int x = blockIdx.x; int y = blockIdx.y;
     const int idx = %(idx)s; const int idy = %(idy)s;
     float tA[%(wA)d]; float tB[%(wB)d];
     float rC[%(wA)d][%(wB)d] = {%(Czero)s};
@@ -33,7 +33,8 @@ tdot_k%(name)s(%(Cshape)s,
     // Preload sA/sB %(preload)s
     __syncthreads();
 
-    // Central Load-Accumulate-Swap Loop %(accum_loops)s
+    // Central Load-Accumulate-Swap Loop
+    %(accum_loops)s
         %(inner)s
         __syncthreads();
     %(end_accum_loops)s
@@ -148,16 +149,8 @@ def plan_copy_2D(A, perm, shape, T, out, nws=4):
                                         # [n*e0,m*f0, 0,j*b0,k*c0,l*d0]
         Ji = lin_index(JJ[:n], s_sh[:n])
         Jo = lin_index(JJ[n:], s_sh[n:])
-        load += ws + "s%s[tx%s+%d][ty%s+%d] = %s[%s];"%(pre,
+        load += ws + "s%s[tx%s+%2d][ty%s+%2d] = %s[%s];"%(pre,
                         pre,Ji,   pre,Jo,   pre, A[II])
-
-    # advance ptr by inner blk
-    shi = [0]*A.n
-    for i,j in enumerate(perm):
-        if j >= nc:
-            shi[i] = sh[i]
-    adv = "%s += "%pre + A[shi] + ";"
-    load += ws + adv
 
     # transpose on second copy (sA <- rA)
     def f(code, nws=8):
@@ -169,7 +162,7 @@ def plan_copy_2D(A, perm, shape, T, out, nws=4):
         for i,I in enumerate(copy):
             II = [a*b for a,b in zip(I,index)] # strided copy
                                                # [j*b0,n*e0,l*d0,k*c0,m*f0]
-            s += ws + "r%s[%d] = %s[%s];"%(pre,i,pre,A[II])
+            s += ws + "r%s[%2d] = %s[%s];"%(pre,i,pre,A[II])
         s += "\n" + code + "\n"
         # sA[tyA:tyA+BLK_K:DIM_YA][txA:txA+BLK_M:DIM_XA]
         #        = ra[:BLK_K/DIM_YA][BLK_M/DIM_XA]
@@ -181,9 +174,8 @@ def plan_copy_2D(A, perm, shape, T, out, nws=4):
                                                # [n*e0,m*f0, 0,j*b0,k*c0,l*d0]
             Ji = lin_index(JJ[:n], s_sh[:n]) # (n*e0)*f + m*f0
             Jo = lin_index(JJ[n:], s_sh[n:]) # ((j*b0)*c + k*c0)*d + l*d0
-            s += ws + "s%s[tx%s+%d][ty%s+%d] = r%s[%d];"%(pre,
+            s += ws + "s%s[tx%s+%2d][ty%s+%2d] = r%s[%2d];"%(pre,
                             pre,Ji, pre,Jo, pre, i)
-        s += ws + adv
         return s
 
     return d, load, f
@@ -273,11 +265,14 @@ def gen_tdot(thr_blk, work_blk, pa, pb):
         return ind_code
 
     def accum_loops():
-        lp = ""
+        lp =  "A += %d*sA_stride%d;"%(blk[-1], pa.index(nc+n-1)) \
+           + " B += %d*sB_stride%d;"%(blk[-1], pb.index(nc+n-1))
         for i in range(n):
-          lp += ws + "for(J%(i)d=0; J%(i)d < sC%(j)d-%(nest)d; J%(i)d+=%(nest)d) {" % {
+          lp += ws + "for(; J%(i)d < sC%(j)d; J%(i)d+=%(nest)d, A+=%(nest)d*sA_stride%(ja)d, B+=%(nest)d*sB_stride%(jb)d) {" % {
                   'i': i,
                   'j': i+nc,
+                  'ja' : pa.index(i+nc),
+                  'jb' : pb.index(i+nc),
                   'nest' : work_blk[i+nc],
                 }
         return lp
@@ -287,6 +282,7 @@ def gen_tdot(thr_blk, work_blk, pa, pb):
         for i in range(n-1, 0, -1):
             s += "} A -= J%d*sA_stride%d;"%(i, pa.index(i+nc))
             s +=  " B -= J%d*sB_stride%d;"%(i, pb.index(i+nc))
+            s += " J%d = 0;"%i
             s += ws
         if n > 0:
             s += "}"
@@ -299,10 +295,10 @@ def gen_tdot(thr_blk, work_blk, pa, pb):
         for(k = 0; k<%d; k++) {"""%(prod(work_blk[nc:])))
         for i,I in enumerate(workA):
             II = [a*b for a,b in zip(I, thrA)]
-            s += ws + "tA[%d] = sA[k][%d+idx];"%(i,blkA[II])
+            s += ws + "tA[%d] = sA[k][%2d+idx];"%(i,blkA[II])
         for j,J in enumerate(workB):
             JJ = [a*b for a,b in zip(J, thrB)]
-            s += ws + "tB[%d] = sB[k][%d+idy];"%(j,blkB[JJ])
+            s += ws + "tB[%d] = sB[k][%2d+idy];"%(j,blkB[JJ])
         s += indent(nws-8, """
             #pragma unroll
             for(n=0; n<%d; n++) {
@@ -313,7 +309,7 @@ def gen_tdot(thr_blk, work_blk, pa, pb):
             }
         }"""%(len(workA), len(workB)))
         if sync:
-            s += ws + "__syncthreads();"
+            s += "\n" + " "*nws + "__syncthreads();"
         return s
 
     def store():
@@ -326,6 +322,8 @@ def gen_tdot(thr_blk, work_blk, pa, pb):
                        C[II], workA[Ai], workB[Bi], C[II])
         return s
 
+    dec_loops = "int " + ", ".join("J%d = 0"%i for i in range(n-1)) \
+              + ", J%d = %d"%(n-1,blk[-1])
     return template % {
             'name' :   bname(blk)  + "T" + bname(thr_blk) \
                      + "A" + bname(pa) + "B" + bname(pb),
@@ -341,12 +339,12 @@ def gen_tdot(thr_blk, work_blk, pa, pb):
                                 for a in range(workA.sz)),
             'idx' : re_index("tx", thrA, blkA.shape),
             'idy' : re_index("ty", thrB, blkB.shape),
-            'decl' : mk_inds("J",range(n))+", n, m, k;" + decA+decB,
+            'decl' : dec_loops + ", n, m, k;" + decA+decB,
             'compute_strides' :  A.strides() \
                                + B.strides() \
                                + C.strides(),
             'ind' : skip(),
-            'preload' : preA+preB,
+            'preload' : preA + preB,
             'accum_loops' : accum_loops(),
             'end_accum_loops' : end_accum_loops(),
             'inner' : cpyA(cpyB(accum())),

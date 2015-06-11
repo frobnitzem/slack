@@ -26,7 +26,8 @@ double sync_wtime( cudaStream_t queue ) {
 // Run a tdot on the cuda device.
 void tdot(struct DotInfo *info, float *A, float *B, float *C) {
     float *d_A, *d_B, *d_C;
-    double time;
+    double time, min;
+    int i;
     cudaStream_t stream;
 
     gpuErrchk(cudaStreamCreate(&stream)); // O(250 ms)
@@ -43,9 +44,12 @@ void tdot(struct DotInfo *info, float *A, float *B, float *C) {
     gpuErrchk(cudaMemcpyAsync(d_C, C, info->clen*sizeof(float),
                     cudaMemcpyHostToDevice, stream));
 
-    time = sync_wtime(stream);
-    tdot1(info, d_A, d_B, d_C, stream);
-    time = sync_wtime(stream) - time;
+    for(i=0; i<10; i++) {
+        time = sync_wtime(stream);
+        tdot1(info, d_A, d_B, d_C, stream);
+        time = sync_wtime(stream) - time;
+        if(i == 0 || time < min) min = time;
+    } time = min;
 
     gpuErrchk(cudaMemcpyAsync(C, d_C, info->clen*sizeof(float),
                     cudaMemcpyDeviceToHost, stream));
@@ -58,12 +62,17 @@ void tdot(struct DotInfo *info, float *A, float *B, float *C) {
     gpuErrchk(cudaStreamDestroy(stream));
 
     int inner = info->n > 0 ? info->scontr[0]*info->stride[0] : 1;
-    printf("TDOT: %f Gflops\n", 2e-9*info->clen*inner/time);
+    printf("TDOT: %f s => %f Gflops\n", time, 2e-9*info->clen*inner/time);
 }
 
-#define N 16
+//last2
+//#define N 16
+//#define K 4
 
-int main(void) {
+#define N 24
+#define K 16
+
+int main(int argc, char **argv) {
     float *A, *B, *C;
     /*int na = 3; int pa[] = {1,2,3}; int sa[] = {128,128,128};
     int nb = 2; int pb[] = {0,3};   int sb[] = {128,128};
@@ -75,17 +84,40 @@ int main(void) {
     /*int na = 1; uint8_t pa[] = {1}; int sa[] = {4};
     int nb = 2; uint8_t pb[] = {1,0}; int sb[] = {4,3};
     int nc = 1; int sc[] = {3};*/
-    // tdot32_32_1_1_16T4_4_1_1A0_2_4B1_3_4
-    int na = 4; uint8_t pa[] = {4,2,0,5}; int sa[] = {8,1,N,8};
-    int nb = 4; uint8_t pb[] = {1,5,4,3}; int sb[] = {1,8,8,N};
-    int nc = 4;                           int sc[] = {N,1,1,N};
+    // Minimum size for a single tile:
+    // last2
+    /*int na = 4; uint8_t pa[] = {4,2,0,5}; int sa[] = {K,1,N,K};
+    int nb = 4; uint8_t pb[] = {1,5,4,3}; int sb[] = {1,K,K,N};
+    int nc = 4;                           int sc[] = {N,1,1,N};*/
+    int na = 4; uint8_t pa[] = {4,2,0,5}; int sa[] = {K,4,N,K};
+    int nb = 4; uint8_t pb[] = {1,5,4,3}; int sb[] = {4,K,K,N};
+    int nc = 4;                           int sc[] = {N,4,4,N};
+    int i, n;
 
-    struct DotInfo *info = calc_plan(1.0, na, sa, pa,
-                                          nb, sb, pb,
-                                     0.0, nc);
+    struct DotInfo *info;// = calc_plan(1.0, na, sa, pa,
+                         //                 nb, sb, pb,
+                         //            0.0, nc);
     if(info == NULL) {
         return 1;
     }
+    if(argc != 2) {
+        printf("Usage: %s N\n", argv[0]);
+        exit(1);
+    }
+    n = atoi(argv[1]);
+    for(i=0; i<na; i++) {
+        sa[i] = (n+sa[i]-1)/sa[i]*sa[i];
+        if(pa[i] > nc && sa[i] < 2*K)
+            sa[i] = 2*K;
+    }
+    for(i=0; i<nb; i++) {
+        sb[i] = (n+sb[i]-1)/sb[i]*sb[i];
+        if(pb[i] > nc && sb[i] < 2*K)
+            sb[i] = 2*K;
+    }
+    for(i=0; i<nc; i++) sc[i] = (n+sc[i]-1)/sc[i]*sc[i];
+
+    info = calc_plan(1.0, na, sa, pa, nb, sb, pb, 0.0, nc);
 
     show_plan(info);
     A  = (float *)malloc(info->alen*sizeof(float)); fill_float(A, info->alen);
@@ -97,7 +129,7 @@ int main(void) {
     //show_mat(B, sb[0], sb[1]);
     tdot(info, A, B, C);
 
-    show_mat(C, sc[0], sc[1]);
+    //show_mat(C, sc[0], sc[1]);
     //show_vec(C, sc[0]);
     free(A); free(B); free(C);
     free(info);

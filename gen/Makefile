@@ -11,7 +11,8 @@ LDFLAGS=-L/usr/local/cuda/lib64 -lcudart
 #NVFLAGS += -DTX=96 -DTY=1 -DWX=1 -DWY=96 -DNEST=32
 
 #kern=test3.cu
-kern=last.cu
+kern=last3.cu
+#NVFLAGS += -G -Xcompiler -rdynamic -lineinfo
 
 #kern=kern3.cu
 #NVFLAGS += -DNAME=tdot_kernel_T8_1_32_1_W1_1_1_32_N8_8
