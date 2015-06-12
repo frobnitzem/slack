@@ -1,0 +1,17 @@
+Coding conventions:
+
+ 1. I am the code thou art currently developing, and thou shalt put no
+    conflicting dependencies before me.
+ 2. Thou shalt not break the build - lest thy jobs crash
+    down upon thee whilst thou sleepest.
+ 3. Thou shalt not create a framework without at least
+    three inhabitants.  Three shall be the number of the count.
+ 4. Thou art charged to cast out the malevolent global variables
+    wherever they are to be found.  The exceptions are those
+    variables associated with the main function and its host.
+ 5. Thou shalt not needlessly proliferate arguments to functions
+    where struct will do.
+    Neither shalt thou covet the needlessly complicated
+    data structures of object oriented code.
+ 6. Thou art cautioned to use the one true brace style,
+    lest thy colleagues profane thee behind thy back.

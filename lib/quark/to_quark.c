@@ -115,9 +115,9 @@ void qrun_tdot(Quark *q) {
     quark_unpack_args_4(q, mem, n, a, b);
     dot = n->op->dot;
 
-    tdot(dot->alpha, a->val, dot->pa, \
-                     b->val, dot->pb,
-         dot->beta,  n->val);
+    tdot(dot->beta,  n->val,
+         dot->alpha, a->val, dot->pa, \
+                     b->val, dot->pb);
     tensor_dtor(&a->val, mem);
     tensor_dtor(&b->val, mem);
 }

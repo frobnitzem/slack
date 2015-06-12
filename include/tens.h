@@ -32,20 +32,20 @@ Tensor *uniq_tens(MemSpace *, Tensor *, const int nref);
 
 //Tensor *tensdot(Tensor *a, Tensor *b, int nc, int *ind, int nref, Slice *m);
 // These just wrap tensadd, tensdot, DSCAL
-void tdot(const double alpha, Tensor *a, const uint8_t *pa,
-                              Tensor *b, const uint8_t *pb,
-          const double beta,  Tensor *c);
+void tdot(const double beta,  Tensor *c,
+          const double alpha, Tensor *a, const uint8_t *pa,
+                              Tensor *b, const uint8_t *pb);
 void tadd(const double alpha, Tensor *a,
           const double beta,  Tensor *b, const uint8_t *pb);
 void tscale(const double, Tensor *);
 
 
 // low-level Blas-like routines.
-void tensdot(const double alpha,
-             double *A, const int na, const int *sa, const uint8_t *pa,
-             double *B, const int nb, const int *sb, const uint8_t *pb,
-             const double beta,
-             double *C, int nc);
+void tensdot(const double beta,
+               double *C, int nc,
+             const double alpha,
+               double *A, const int na, const int *sa, const uint8_t *pa,
+               double *B, const int nb, const int *sb, const uint8_t *pb);
 void tensadd(const double alpha,
              double *A, const int n, const int *sa,
              const double beta,

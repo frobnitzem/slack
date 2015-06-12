@@ -10,7 +10,7 @@ test: tdot.so test_tdot.py
 	python test_tadd.py
 
 tdot.so: tdot.c tadd.c
-	gcc -shared -o $@ $^
+	gcc -fPIC -shared -o $@ $^
 
 clean:
 	rm -f $(OBJS)
