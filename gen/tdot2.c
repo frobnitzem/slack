@@ -94,9 +94,9 @@ int main(int argc, char **argv) {
     int nc = 4;                           int sc[] = {N,4,4,N};
     int i, n;
 
-    struct DotInfo *info;// = calc_plan(1.0, na, sa, pa,
-                         //                 nb, sb, pb,
-                         //            0.0, nc);
+    struct DotInfo *info;// = calc_plan(0.0, nc,
+                         //             1.0, na, sa, pa,
+                         //                  nb, sb, pb)
     if(info == NULL) {
         return 1;
     }
@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
     }
     for(i=0; i<nc; i++) sc[i] = (n+sc[i]-1)/sc[i]*sc[i];
 
-    info = calc_plan(1.0, na, sa, pa, nb, sb, pb, 0.0, nc);
+    info = calc_plan(0.0, nc, 1.0, na, sa, pa, nb, sb, pb);
 
     show_plan(info);
     A  = (float *)malloc(info->alen*sizeof(float)); fill_float(A, info->alen);
@@ -138,12 +138,12 @@ int main(int argc, char **argv) {
 }
 
 // Wrapper for last-minute planners.
-void tensdot(float alpha, float *A, int na, int *sa, uint8_t *pa,
-                          float *B, int nb, int *sb, uint8_t *pb,
-             float beta,  float *C, int nc) {
-    struct DotInfo *info = calc_plan(alpha, na, sa, pa,
-                                            nb, sb, pb,
-                                     beta,  nc);
+void tensdot(float beta,  float *C, int nc,
+             float alpha, float *A, int na, int *sa, uint8_t *pa,
+                          float *B, int nb, int *sb, uint8_t *pb) {
+    struct DotInfo *info = calc_plan(beta, nc,
+                                     alpha, na, sa, pa,
+                                            nb, sb, pb);
     if(info == NULL) { // error
         return;
     }

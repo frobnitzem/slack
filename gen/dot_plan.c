@@ -59,9 +59,9 @@ static int get_strides(int *stride, const int *shape, int n) {
     return k;
 }
 
-struct DotInfo *calc_plan(float alpha, int na, const int *sa, const uint8_t *pa,
-                                       int nb, const int *sb, const uint8_t *pb,
-                          float beta,  int nc) {
+struct DotInfo *calc_plan(float beta,  int nc,
+                        float alpha, int na, const int *sa, const uint8_t *pa,
+                                     int nb, const int *sb, const uint8_t *pb) {
     int n = (na+nb - nc)/2;
     int sp = 3*nc + 4*n;
     int Astride[20];

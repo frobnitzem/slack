@@ -48,9 +48,9 @@ void tdot(struct DotInfo *info, const float *A, const float *B, float *C) {
 }
 
 // Wrapper for last-minute planners.
-void tensdot(float alpha, float *A, int na, int *sa, uint8_t *pa,
-                          float *B, int nb, int *sb, uint8_t *pb,
-             float beta,  float *C, int nc) {
+void tensdot(float beta,  float *C, int nc,
+             float alpha, float *A, int na, int *sa, uint8_t *pa,
+                          float *B, int nb, int *sb, uint8_t *pb) {
     struct DotInfo *info = calc_plan(alpha, na, sa, pa,
                                             nb, sb, pb,
                                      beta,  nc);

@@ -3,61 +3,69 @@
 #
 # It's an intermediary step before gen_tdot2.py.
 #
-#    __shared__ FloatingPoint_t sA[BLK_K][BLK_M+1];      // +1 only required if A is transposed
-#   __shared__ FloatingPoint_t sB[BLK_N][BLK_K+1];      // +1 always required
+#    __shared__ FloatingPoint_t sA[BLK_K][BLK_A+1];      // +1 only required if A is transposed
+#   __shared__ FloatingPoint_t sB[BLK_B][BLK_K+1];      // +1 always required
 
 #   // Registers for the innermost loop
-#   FloatingPoint_t rC[THR_N][THR_M];
-#   FloatingPoint_t rA[THR_M];
-#   FloatingPoint_t rB[THR_N];
+#   FloatingPoint_t rC[THR_B][THR_A];
+#   FloatingPoint_t rA[THR_A];
+#   FloatingPoint_t rB[THR_B];
 
 #NN
-#FloatingPoint_t ra[BLK_K/DIM_YA][BLK_M/DIM_XA];
-#FloatingPoint_t rb[BLK_N/DIM_YB][BLK_K/DIM_XB];
+#FloatingPoint_t ra[BLK_K/THR_YA][BLK_A/THR_XA];
+#FloatingPoint_t rb[BLK_B/THR_YB][BLK_K/THR_XB];
 
-#thread_shape = (DIM_Y, DIM_X)
-#a-copy = (N/DIM_XA, DIM_XA)
-#b-copy = (N/DIM_XB, DIM_XB)
+#thread_shape = (THR_Y, THR_X)
+#a-copy = (N/THR_XA, THR_XA)
+#b-copy = (N/THR_XB, THR_XB)
 
 #NN -- inner step along major of A, minor of B
-#const FloatingPoint_t *offs_dA = A + blx*BLK_M     + idyA*LDA + idxA;
-#const FloatingPoint_t *offs_dB = B + bly*BLK_N*LDB + idyB*LDB + idxB;
+#const FloatingPoint_t *offs_dA = A + blx*BLK_A     + idyA*LDA + idxA;
+#const FloatingPoint_t *offs_dB = B + bly*BLK_B*LDB + idyB*LDB + idxB;
 
-#BLK_M = THR_M*DIM_X
-#BLK_N = THR_N*DIM_Y
+#BLK_A = THR_A*THR_X
+#BLK_B = THR_B*THR_Y
 
-#A : (BLK_K, BLK_M)
-#B : (BLK_N, BLK_K)
-#C : (THR_N, THR_M) -- work done by each thread
+# A : (BLK_K, BLK_A)
+# B : (BLK_B, BLK_K)
+#rC : (WORK_B, WORK_A) -- work done by each thread
 
-# Zero rC[THR_N][THR_M]
-# sA[idyA:idyA+BLK_K:DIM_YA, idxA:idxA+BLK_M:DIM_XA]
-#    = A[:BLK_K:DIM_YA, :BLK_M:DIM_XA]
-# sB[idyB:idyB+BLK_N:DIM_YB, idxB:idxB+BLK_K:DIM_XB]
-#    = B[:BLK_N:DIM_YB, :BLK_K:DIM_XB]
+# -- Advance A, B, C to beginning of thread i/o locations
+# A += ixA[txA, tyA+i*BLK_A]
+# B += ixB[txB, tyB+j*BLK_B]
+# C += ixC[tx+i*BLK_A,ty+j*BLK_B]
+#
+# sA[txA:BLK_K:THR_XA][tyA:BLK_A:THR_YA] = A[:BLK_K:THR_XA][:BLK_A:THR_YA]
+# sB[txB:BLK_K:THR_XB][tyB:BLK_B:THR_YB] = B[:BLK_K:THR_XB][:BLK_B:THR_YB]
 #
 # sync
-# Loop over kk = 0:K-BLK_K:BLK_K
-#    offs_dA += BLK_K*LDA
-#    offs_dB += BLK_K
+# for kk = BLK_K:K:BLK_K
+#    A += ixA[0,BLK_K]
+#    B += ixB[0,BLK_K]
 #
-#    Start loads from cuda memory
-#    ra[:BLK_K/DIM_YA, :BLK_M/DIM_XA] = A[:BLK_K:DIM_YA, :BLK_M:DIM_XA]
-#    rb[:BLK_N/DIM_YB, :BLK_K/DIM_XB] = B[:BLK_N:DIM_YB, :BLK_K:DIM_XB]
-#    loop over k = 0:BLK_K and compute GER
-#      rA[:THR_M] = sA[k][idx:idx+THR_M*DIM_X:DIM_X]
-#      rB[:THR_N] = sB[idy:idy+THR_N*DIM_Y:DIM_Y][k]
-#      loop over n = :THR_N and m = :THR_M
-#        rC[n][m] += rA[m]*rB[n] // fma
+#    -- start loads from gpu global memory
+#    rA = A[:BLK_K:THR_XA][:BLK_A:THR_YA]
+#    rB = B[:BLK_K:THR_XB][:BLK_B:THR_YB]
+#    for k = 0:BLK_K -- compute GER
+#      tA = sA[k][tx:BLK_A:THR_A]
+#      tB = sB[k][ty:BLK_B:THR_B]
+#      for n,m = 0:WORK_A, 0:WORK_B
+#        rC[n][m] += tA[n]*tB[m] // fma
+#      end for
+#    end for
 #    sync
-#    sA[idyA:idyA+BLK_K:DIM_YA][idxA:idxA+BLK_M:DIM_XA] 
-#          = ra[:BLK_K/DIM_YA][BLK_M/DIM_XA]
-#    sB[idyB:idyB+BLK_N:DIM_YB][idxB:idxB+BLK_K:DIM_XB]
-#          = rb[:BLK_N/DIM_YB][:BLK_K/DIM_XB]
+#    sA[txA:BLK_K:THR_XA][tyA:BLK_A:THR_YA] = rA
+#    sB[txB:BLK_K:THR_XB][tyB:BLK_B:THR_YB] = rB
 #    sync
-# Do last multiplication
-# offsC = (bly*BLK_N + idy)*LDC + blx*BLK_M + idx
-# C[:THR_N*DIM_Y:DIM_Y][:THR_M*DIM_X:DIM_X] = alpha*regC + beta*C[...]
+# end for
+#
+# -- do last multiplication
+# tA = sA[k][tx:BLK_A:THR_A]
+# tB = sB[k][ty:BLK_B:THR_B]
+# for n,m = 0:WORK_A, 0:WORK_B
+#     rC[n][m] += tA[n]*tB[m] // fma
+# end for
+# C[:BLK_A:THR_A][:WORK_B:THR_B] = alpha*rC + beta*C[...]
 
 template = """void %(name)s(int sa0, int sa1, int sb0, int sb1) {
     const int tn = threadIdx.x;
@@ -83,11 +91,11 @@ multiply = """
             // Load tA and tB from shmem
             #pragma unroll
             for(m=0; m<%(M)d; m++) {
-                tA[m] = sA[k][m*DIM_X+idx];
+                tA[m] = sA[k][m*THR_X+idx];
             }
             #pragma unroll
             for(n=0; n<%(N)d; n++) {
-                tB[n] = sB[k][n*DIM_Y+idy];
+                tB[n] = sB[k][n*THR_Y+idy];
             }
             
             // Compute

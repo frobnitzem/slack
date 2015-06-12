@@ -4,10 +4,6 @@
 #* Please use these index tricks and stop re-writing gemm.
 #*
 
-#void tensdot(double alpha, double *A, int na, int *sa, int *pa,
-#                           double *B, int nb, int *sb, int *pb,
-#             double beta,  double *C, int n)
-
 from ctypes import CDLL, c_int32, c_int, c_double
 import numpy as np
 import numpy.ctypeslib as ct
@@ -36,16 +32,16 @@ intarr = ct.ndpointer(dtype=np.int32, flags='C_CONTIGUOUS')
 inds   = ct.ndpointer(dtype=np.uint8, flags='C_CONTIGUOUS')
 dblarr = ct.ndpointer(dtype=np.float64, flags='C_CONTIGUOUS')
 
-void_fn(dw.tensdot, c_double, dblarr, c_int32, intarr, inds,
-                                dblarr, c_int32, intarr, inds,
-                      c_double, dblarr, c_int32)
+void_fn(dw.tensdot, c_double, dblarr, c_int32,
+                    c_double, dblarr, c_int32, intarr, inds,
+                              dblarr, c_int32, intarr, inds)
 
-def tdot(alpha, A, pa, B, pb, beta, C):
-    dw.tensdot(alpha, A, len(A.shape), array(A.shape, dtype=np.int32),
+def tdot(beta, C, alpha, A, pa, B, pb):
+    dw.tensdot(beta, C, len(C.shape),
+              alpha, A, len(A.shape), array(A.shape, dtype=np.int32),
                                        pa.astype(np.uint8),
-                      B, len(B.shape), array(B.shape, dtype=np.int32),
-                                       pb.astype(np.uint8),
-                beta, C, len(C.shape))
+                     B, len(B.shape), array(B.shape, dtype=np.int32),
+                                       pb.astype(np.uint8))
 
 def test_sz(sa, pa, sb, pb, nc):
     print "  ==  Test", sa, pa, sb, pb, nc, "=="
@@ -73,7 +69,7 @@ def test_sz(sa, pa, sb, pb, nc):
          + pb[where(pb < nc)].tolist()) # output permutation from tensdot
     print sind, tr
 
-    tdot(1.0, A, pa, B, pb, 0.0, C)
+    tdot(0.0, C, 1.0, A, pa, B, pb)
     #print A
     #print B
     #print C

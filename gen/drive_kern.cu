@@ -193,7 +193,7 @@ void tdot1(struct DotInfo *p, const float *A, const float *B, float *C,
 //#define NAME tdot32_32_16T8_8A0_2B1_2
 //#define NAME tdot32_32_1_1_16T4_4_1_1A0_2_4B1_3_4
 //#define NAME tdot16_1_1_16_4_4T4_1_1_4A4_2_0_5B1_5_4_3
-//#define NAME tdot24_4_4_24_4_4T4_4_4_4A4_2_0_5B1_5_4_3
+#define NAME tdot24_4_4_24_4_4T4_4_4_4A4_2_0_5B1_5_4_3
 
 extern "C" {
 void

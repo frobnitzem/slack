@@ -6,12 +6,12 @@
 void print_vec(int *x, int n);
 
 
-void tdot(const double alpha, Tensor *a, const uint8_t *pa,
-                              Tensor *b, const uint8_t *pb,
-          const double  beta, Tensor *c) {
-    tensdot(alpha, a->x, a->n, a->shape, pa,
-                   b->x, b->n, b->shape, pb,
-             beta, c->x, c->n);
+void tdot(const double  beta, Tensor *c,
+          const double alpha, Tensor *a, const uint8_t *pa,
+                              Tensor *b, const uint8_t *pb) {
+    tensdot( beta, c->x, c->n,
+            alpha, a->x, a->n, a->shape, pa,
+                   b->x, b->n, b->shape, pb);
 }
 
 void tadd(const double alpha, Tensor *a,

@@ -50,11 +50,11 @@ void print_nvec(char *, int *x, int n);
  *       into small-sized gemm-s.
  */
 
-void tensdot(const double alpha,
+void tensdot(const double beta,
+              double *C, int nc,
+             const double alpha,
               double *A, const int na, const int *sa, const uint8_t *pa,
-              double *B, const int nb, const int *sb, const uint8_t *pb,
-             const double beta,
-              double *C, int nc) {
+              double *B, const int nb, const int *sb, const uint8_t *pb) {
     if(na > 100 || nb > 100 || nc > na+nb || na < 1 || nb < 1 || nc < 0
             || (na+nb-nc)%2 == 1) {
         printf("whoa there!\n");

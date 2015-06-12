@@ -23,9 +23,9 @@ struct DotInfo {
     info->Bstride = info->Cstride + nc+2*n + (nc+n); \
 }
 
-struct DotInfo *calc_plan(float alpha, int na, const int *sa, const uint8_t *pa,
-                                       int nb, const int *sb, const uint8_t *pb,
-                          float beta,  int nc);
+struct DotInfo *calc_plan(float beta,  int nc,
+            float alpha, int na, const int *sa, const uint8_t *pa,
+                         int nb, const int *sb, const uint8_t *pb);
 
 void fill_float(float *x, int n);
 void show_vec(float *x, int n);
