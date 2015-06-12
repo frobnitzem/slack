@@ -322,8 +322,8 @@ def gen_tdot(thr_blk, work_blk, pa, pb):
                        C[II], workA[Ai], workB[Bi], C[II])
         return s
 
-    dec_loops = "int " + ", ".join("J%d = 0"%i for i in range(n-1)) \
-              + ", J%d = %d"%(n-1,blk[-1])
+    dec_loops = "int " + ", ".join( ["J%d = 0"%i for i in range(n-1)] \
+                                   +["J%d = %d"%(n-1,blk[-1])]        )
     return template % {
             'name' :   bname(blk)  + "T" + bname(thr_blk) \
                      + "A" + bname(pa) + "B" + bname(pb),

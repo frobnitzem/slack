@@ -22,8 +22,8 @@ __global__ void tdot_kernel1(struct DotInfo *info,
 extern "C"
 void tdot1(struct DotInfo *info, const float *A, const float *B, float *C,
 	   cudaStream_t stream) {
-    int blk = info->clen/info->Cstride[0];
-    int thr = info->Cstride[0];
+    int blk = info->clen/info->Cstride[2];
+    int thr = info->Cstride[2];
     struct DotInfo *d_info;
 
     if(thr > NTHR_MAX || blk > BLK_MAX) {
@@ -168,12 +168,32 @@ void tdot1(struct DotInfo *p, const float *A, const float *B, float *C,
     );
 }
 
+#elif defined(GEMM)
+
+extern "C" {
+void
+GEMM(int sC0, int sC1, int sC2,
+    float alpha, const float* __restrict__ A, const float* __restrict__ B,
+    float  beta,       float* __restrict__ C, cudaStream_t stream);
+
+void tdot1(struct DotInfo *p, const float *A, const float *B, float *C,
+	   cudaStream_t stream) {
+    int sc0 = p->clen       / p->Cstride[0];
+    int sc1 = p->Cstride[0];
+
+    printf("C shape = %d x %d x %d\n", sc0, sc1, p->scontr[0]);
+    GEMM(sc0, sc1, p->scontr[0], p->alpha, A, B, p->beta, C, stream);
+}
+}
+
+#define NAME tdot96_96_16T16_16A0_2B2_1
+
 #else
 //#define NAME tdot8_12_3T2_3A1_2B2_0
 //#define NAME tdot32_32_16T8_8A0_2B1_2
 //#define NAME tdot32_32_1_1_16T4_4_1_1A0_2_4B1_3_4
 //#define NAME tdot16_1_1_16_4_4T4_1_1_4A4_2_0_5B1_5_4_3
-#define NAME tdot24_4_4_24_4_4T4_4_4_4A4_2_0_5B1_5_4_3
+//#define NAME tdot24_4_4_24_4_4T4_4_4_4A4_2_0_5B1_5_4_3
 
 extern "C" {
 void
