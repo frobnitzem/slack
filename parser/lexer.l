@@ -1,5 +1,5 @@
 %option reentrant
-%option prefix="tce2_"
+%option prefix="slack_"
 %option bison-bridge
 %option bison-locations
 %option noyywrap
@@ -22,7 +22,7 @@
     result = read_next(yyextra, buf, max_size); }
 
    size_t read_next(struct Lexer_Context *, char *, size_t);
-   void tce2_error(YYLTYPE *, struct Lexer_Context *, const char *s, ...);
+   void slack_error(YYLTYPE *, struct Lexer_Context *, const char *s, ...);
 
 %}
 
@@ -137,7 +137,7 @@ UAL3 (\xe0(\xa0[\x80-\x95\x9a\xa4\xa8]|\xa1[\x80-\x98]|\xa2[\xa0\xa2-\xac]|\xa4[
         }
 
 .       {
-            tce2_error(yylloc, yyextra, "Mystery character '%c'.\n", *yytext);
+            slack_error(yylloc, yyextra, "Mystery character '%c'.\n", *yytext);
         }
 %%
 /*
@@ -156,16 +156,16 @@ char **argv;
 }
 }*/
 
-void tce2_lex_ctor(struct Lexer_Context *t) {
+void slack_lex_ctor(struct Lexer_Context *t) {
    yylex_init(&t->scanner);
    yyset_extra(t, t->scanner);
 }
 
-void tce2_lex_dtor(struct Lexer_Context *t) {
+void slack_lex_dtor(struct Lexer_Context *t) {
    yylex_destroy(t->scanner);
 }
 
-void tce2_error(YYLTYPE *llocp, struct Lexer_Context *ctxt, const char *s, ...) {
+void slack_error(YYLTYPE *llocp, struct Lexer_Context *ctxt, const char *s, ...) {
   va_list ap;
   va_start(ap, s);
   fprintf(stderr, "%d: error: ", llocp->first_line);

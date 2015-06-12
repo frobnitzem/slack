@@ -1,7 +1,27 @@
-/*  Copyright David M. Rogers, 2015
- *  This code is made available under terms of the GNU GPL.
- *  A copy is included at the top-level of the source tree.
+/*    Copyright (C) David M. Rogers, 2015
+ *    
+ *    David M. Rogers <predictivestatmech@gmail.com>
+ *    Nonequilibrium Stat. Mech. Research Group
+ *    Department of Chemistry
+ *    University of South Florida
+ *
+ *    This file is part of USF-slack.
+ *
+ *    This version of slack is free software: you can redistribute
+ *    it and/or modify it under the terms of the GNU General Public
+ *    License as published by the Free Software Foundation, either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    USF-slack is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    in the LICENSE file at the top of USF-slack's source tree.
+ *    If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <stdio.h>
@@ -58,7 +78,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    if( (defs = tce2_parse_inp(&e, f)) == NULL) {
+    if( (defs = slack_parse_inp(&e, f)) == NULL) {
         printf("bad parse.\n");
     } else if(e.debuglevel) {
         n = smap_iter(defs, show_assign, NULL);

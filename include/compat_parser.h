@@ -11,6 +11,6 @@ typedef union YYSTYPE {
 
 struct YYLTYPE;
 #define YYSTYPE_IS_DECLARED 1
-void tce2_error(struct YYLTYPE *, struct Lexer_Context *, const char *s, ...);
-int tce2_lex(YYSTYPE *, struct YYLTYPE *, void *);
+void slack_error(struct YYLTYPE *, struct Lexer_Context *, const char *s, ...);
+int slack_lex(YYSTYPE *, struct YYLTYPE *, void *);
 

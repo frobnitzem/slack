@@ -31,10 +31,10 @@ int partition_inds(Slice *cc_p, Slice *ctr_p, Slice csum, Slice ca, Slice cb);
 int ck_duplicate(Slice a);
 
 /* Internal functions */
-void tce2_lex_ctor(struct Lexer_Context *);
-void tce2_lex_dtor(struct Lexer_Context *);
-int tce2_parse(struct Lexer_Context *);
+void slack_lex_ctor(struct Lexer_Context *);
+void slack_lex_dtor(struct Lexer_Context *);
+int slack_parse(struct Lexer_Context *);
 
 /* uses batch parsing mode when ft == 1 */
-SMap *tce2_parse_inp(struct Environ *, FILE *f);
+SMap *slack_parse_inp(struct Environ *, FILE *f);
 

@@ -6,11 +6,11 @@
 #include "parser.tab.h"
 #include "lexer.h"
 
-//int tce2_debug = 1;
+//int slack_debug = 1;
 
 static uint8_t find_index(uint8_t u, Slice a);
 
-SMap *tce2_parse_inp(struct Environ *e, FILE *f) {
+SMap *slack_parse_inp(struct Environ *e, FILE *f) {
     struct Lexer_Context ctxt = {
         .file = f,
         .esc_depth = 0,
@@ -21,11 +21,11 @@ SMap *tce2_parse_inp(struct Environ *e, FILE *f) {
         .ret = smap_ctor(16),
     };
 
-    tce2_lex_ctor(&ctxt);
+    slack_lex_ctor(&ctxt);
 
-    tce2_parse(&ctxt); // nonzero on parse error
+    slack_parse(&ctxt); // nonzero on parse error
 
-    tce2_lex_dtor(&ctxt);
+    slack_lex_dtor(&ctxt);
     smap_dtor(&ctxt.ind_map);
     printf("Total: %d indices.\n", ctxt.nindices);
 

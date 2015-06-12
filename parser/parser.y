@@ -1,5 +1,5 @@
 %pure_parser
-%name_prefix="tce2_"
+%name_prefix="slack_"
 %locations
 %error-verbose
 %defines
@@ -78,7 +78,7 @@ term: term '+' mfactor               { int ord;
                                        uint8_t *perm= get_perm($3->ind,$1->ind,
                                                                 &ord);
                                        if(perm == NULL) {
-                   tce2_error(&yylloc, NULL, "Indices in '+' don't match!\n");
+                   slack_error(&yylloc, NULL, "Indices in '+' don't match!\n");
                    exit(1);
                                        }
                                        $1->a = simpAdd($1->scale, $1->a,
@@ -93,7 +93,7 @@ term: term '+' mfactor               { int ord;
                                        uint8_t *perm= get_perm($3->ind,$1->ind,
                                                                 &ord);
                                        if(perm == NULL) {
-                   tce2_error(&yylloc, NULL, "Indices in '-' don't match!\n");
+                   slack_error(&yylloc, NULL, "Indices in '-' don't match!\n");
                    exit(1);
                                        }
                                        $1->a = simpAdd($1->scale, $1->a,
@@ -121,11 +121,11 @@ factor: contraction                 { $$ = $1; }
       | '(' tuple term ')'          { $$ = mkTuple(slice_append($2, &$3, 1)); }
 */
 
-rand: RAND '(' intlist ')'          { tce2_error(&yyloc, NULL,
+rand: RAND '(' intlist ')'          { slack_error(&yyloc, NULL,
       "Rand needs explicit indices, e.g. rand_{ij} (4,4)\n");
       exit(1);
       }
-    | RAND '(' intlist INT ')'      { tce2_error(&yyloc, NULL,
+    | RAND '(' intlist INT ')'      { slack_error(&yyloc, NULL,
       "Rand needs explicit indices, e.g. rand_{ij} (4,4)\n");
       exit(1);
       }
@@ -135,7 +135,7 @@ rand: RAND '(' intlist ')'          { tce2_error(&yyloc, NULL,
     ;
 
 zero: ZERO indices                  { $$ = mkActive(mkZero(), $2); }
-    | ZERO                          { tce2_error(&yyloc, NULL,
+    | ZERO                          { slack_error(&yyloc, NULL,
       "zero needs explicit indices, e.g. zero_{ij}\n");
       exit(1);
       }
@@ -155,7 +155,7 @@ contraction: SUM indices factor factor {
                Slice act; // [index codes]
                Slice ctr; // [(dim,dim)]
                if(partition_inds(&act, &ctr, $2, $3->ind, $4->ind) < 0) {
-                   tce2_error(&yylloc, NULL, "Bad contraction!\n");
+                   slack_error(&yylloc, NULL, "Bad contraction!\n");
                    exit(1);
                }
                $$ = mkActive(mkTensDot($3->scale*$4->scale,
@@ -173,7 +173,7 @@ literal: STRING indices { $$ = mkActive(mkRef($1), $2); }
 
  /* copy-rule to allow end-of-parse checking */
 indices: ck_indices { if(ck_duplicate($1)) {
-                        tce2_error(&yylloc, NULL, "Duplicate indices!\n");
+                        slack_error(&yylloc, NULL, "Duplicate indices!\n");
                         exit(1);
                       }
                       $$ = $1;
@@ -200,7 +200,7 @@ indlist: /* empty */ { $$ = slice_ctor(1, 0, 4); }
 index: CHAR {  uint8_t ind = (uint8_t) smap_get(context->ind_map, $1);
                if(!ind) {
                    if(context->nindices >= 255) {
-                       tce2_error(&yylloc, NULL, "Overflowed 255 available indices!\n");
+                       slack_error(&yylloc, NULL, "Overflowed 255 available indices!\n");
                        exit(1);
                    }
                    ind = ++context->nindices;

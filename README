@@ -1,0 +1,45 @@
+SLACK: Standard Linear Array Computation Kernels
+
+  Got a large tensor algebra problem? Don't panic.
+This library provides a multi-level interface to high-performance
+linear array computations.
+
+Dependencies:
+
+ 1. CUDA developer kit version 5 or above & GPU for program execution.
+   - Which itself requires GCC.
+ 2. Python 2.4 or above (code generators).
+ 3. Flex/Bison lexer and parser.
+ 4. StarPU distributed task scheduling framework.
+
+Recommended:
+ * A LaTeX distribution for typesetting.
+
+Installation:
+ 1. Edit Makefile
+ 2. run make
+ 3. reference "include/slack.h" and link against lib/libslack.a
+    in your own code.
+   * See examples in bin/*.c
+
+This version of SLACK is Copyright (C) David M. Rogers, 2015
+  
+David M. Rogers <predictivestatmech@gmail.com>
+Nonequilibrium Stat. Mech. Research Group
+Department of Chemistry
+University of South Florida
+
+  This version of SLACK (USF-SLACK) is free software: you can redistribute
+  it and/or modify it under the terms of the GNU General Public
+  License as published by the Free Software Foundation, either
+  version 3 of the License, or (at your option) any later version.
+
+  This software is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  in the LICENSE file at the top of USF-SLACK's source tree.
+  If not, see <http://www.gnu.org/licenses/>.
+

@@ -1,7 +1,7 @@
 
 CXX=/sw/bin/g++-fsf-4.8
 CXXFLAGS = -I../../include -I/sw/include
-LDFLAGS = -L/sw/lib -L../ $^ -ltce2 -ltbb
+LDFLAGS = -L/sw/lib -L../ $^ -lslack -ltbb
 
 .cpp.o:
 	$(CXX) -c -o $@ $(CXXFLAGS) $^

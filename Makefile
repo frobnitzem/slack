@@ -18,26 +18,26 @@ CFLAGS=-ggdb -I/sw/include -I$(PWD)/include
 CFLAGS += -I$(QUARK)
 
 #LDFLAGS=-lixp -lpthread -rdynamic -ldl
-LDFLAGS=-L/sw/lib -lpthread -ldl -ltbb
+LDFLAGS=-L/sw/lib -lpthread
 #LDFLAGS += $(shell pkg-config gnutls --libs)
 LDFLAGS += -L$(QUARK) -lquark
 LDFLAGS += -framework Accelerate
 
-BIN_OBJ=$(PWD)/bin/tce2.o
-LIB=$(PWD)/lib/libtce2.a
+BIN_OBJ=$(PWD)/bin/slack.o
+LIB=$(PWD)/lib/libslack.a
 LIBS=$(PWD)/lib/parse.a $(PWD)/lib/exec.a $(PWD)/lib/serial.a $(PWD)/lib/lib.a
 
 DIRS = exec parser serial test lib
 
 export CC LD CFLAGS LDFLAGS LIBS LIB
 
-all: bin/tce2
+all: bin/slack
 
 tests: test/test.sh
 	sh test/test.sh
 
 distclean: clean
-	rm -f bin/tce2
+	rm -f bin/slack
 
 clean:
 	rm -f $(LIBS) $(LIB) $(BIN_OBJ)
@@ -47,7 +47,7 @@ clean:
 	    done \
 	)
 
-bin/tce2: bin/tce2.o $(LIB)
+bin/slack: bin/slack.o $(LIB)
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 test/test.sh:	test $(LIB)
