@@ -6,7 +6,24 @@
 // This operates between blocks
 //void *exec_ast(Ast *op, int n, void **arg);
 
+#ifdef QUARK
+#define exec_ast run_quark
 Tensor *run_quark(Ast *a, int nthreads, MemSpace *mem, SMap *named);
+#else
+#define exec_ast run_seq
+Tensor *run_seq(Ast *a, int nthreads, MemSpace *mem, SMap *named);
+#endif
+
+struct Node {
+    Ast *op;
+    Tensor *val;
+    int nref;
+    int visited;
+};
+
+// returns a Map from (Ast *) to (struct Node *)
+Map *zip_ast(Ast *a, struct Node **n, SMap *named);
+struct Node *node_ctor(Ast *a, int nref);
 
 /*
 extern void magma_sgemm(

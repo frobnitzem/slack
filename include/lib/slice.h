@@ -2,6 +2,7 @@
 #define _SLICE_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 struct slice_s {
     void *x;

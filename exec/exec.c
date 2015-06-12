@@ -2,32 +2,20 @@
 
 Slice rev_permut(Slice s);
 
-// Interpret the Tensor Contraction Ast
-//
-// The memory management strategy of the interpreter deserves some comment.
-// Hand-written code usually uses a minimum number of memory
-// areas, and sends intermediate results to them, as in a circular
-// buffer.  We can accomplish the same thing here by maintaining
-// a list of active memory spaces during interpretation.
-//
-// The resulting exec function has type:
-//
-// Ast_Tensor -> ST MemSpace Ast_Lit_Tensor
-//
-// The binding expressions are refcounted.
+Tensor *run_seq(Ast *a, int nthreads, MemSpace *mem, SMap *named) {
+    printf("Not implemented.\n");
+    return NULL;
+}
 
-// Traverse the DAG and give each object encountered a refcount.
-// The initial refcount is assumed to be zero.
-//static int count_refs() {
-//    return 0;
-//}
-
+/*
 // Delta-reductions for primitive operations.
 Tensor *reduce_scale(struct Scale *s, Tensor *t) {
     uniq_tens(t);
     SCAL(t->len, s->fac, t->b->x, 1);
     return t;
 }
+
+*/
 
 /*
 Ast *reduce_transpose(struct Prim *p) {
@@ -39,6 +27,7 @@ Ast *reduce_transpose(struct Prim *p) {
     return mkLit(do_transpose(r, a->t->perm));
 }*/
 
+/*
 Ast *reduce_sum(struct Prim *p, Tensor *a, Tensor *b) {
     if(a->b->nref == 1) { // accum. into a.
         uniq_tens(a);
@@ -67,8 +56,7 @@ Tensor *reduce_dot(struct Prim *p, Tensor *a, Tensor *b, Tensor *c) {
     tensor_dtor(&b);
     return c;
 }
-
-
+*/
 
 // construct the inverse of a permutation
 Slice rev_permut(Slice s) {
@@ -81,5 +69,69 @@ Slice rev_permut(Slice s) {
         y[x[i]] = i;
     }
     return r;
+}
+
+/**************** Ast linking and refcounting routines. *************/
+struct Node *node_ctor(Ast *a, int nref) {
+    struct Node *n = malloc(sizeof(struct Node));
+    n->op = a;
+    n->val = NULL;
+    n->nref = nref;
+    n->visited = 0;
+    return n;
+}
+
+// This always returns a Node, whose value is guaranteed not to be a ref.
+static struct Node *zip_ast_rec(Ast *a, SMap *defs, Map *out) {
+    Ast **t;
+    int i, m;
+    struct Node *n = map_get(out, &a);
+
+    if(n == (struct Node *)out) {
+        printf("Error! input graph contains a cycle at elem %p\n", a);
+        return NULL;
+    } else if(n != NULL) { // ref. already added.
+        n->nref++;
+        return n;
+    }
+
+    map_put(out, &a, out); // insert bad ref to detect cycles
+
+    if(a->type == TRef) {
+        Ast *b = smap_get(defs, a->ref);
+        if(b == NULL) {
+            printf("Error! Undefined variable, %s\n", a->ref);
+            return NULL;
+        }
+        if( (n = zip_ast_rec(b, defs, out)) == NULL) {
+            return NULL;
+        }
+        map_put(out, &a, n);
+        return n;
+    }
+    m = ast_children(a, &t);
+    for(i=0; i<m; i++) { // replace child ptrs
+        if(zip_ast_rec(t[i], defs, out) == NULL) {
+            return NULL;
+        }
+    }
+
+    n = node_ctor(a, 1);
+    map_put(out, &a, n);
+    return n;
+}
+
+// TODO: Improve error reporting by setting problematic node on return...
+Map *zip_ast(Ast *a, struct Node **n, SMap *named) {
+    struct Node *r;
+    Map *out = map_ctor(256, sizeof(void *));
+
+    if( (r = zip_ast_rec(a, named, out)) == NULL) {
+        map_dtor(&out);
+        return NULL;
+    }
+    *n = r;
+
+    return out;
 }
 

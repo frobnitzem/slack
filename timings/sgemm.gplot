@@ -1,0 +1,25 @@
+# set terminal png transparent nocrop enhanced size 450,320 font "arial,8" 
+# set output 'histograms.5.png'
+#
+set term postscript eps enhanced mono dashed lw 2 size 4.5,3 "Times" 24
+set output "sgemm.eps"
+
+set border 3 front linewidth 1
+set grid noxtics nomxtics ytics nomytics noztics nomztics \
+ nox2tics nomx2tics noy2tics nomy2tics nocbtics nomcbtics
+set grid layerdefault   lt 0 linewidth 0.500,  lt 0 linewidth 0.500
+#set key outside right top vertical Left reverse noenhanced autotitle columnhead nobox
+#set key invert samplen 4 spacing 1 width 0 height 0 
+set key bottom right
+
+#set title "tdot Performance"
+# magma_nn cublas_nn magma_nt cublas_nt sgemm_nn sgemm_nt test_nt
+set xlabel "N"
+set ylabel "Gflops"
+set xrange [0:128]
+set xtics 32 nomirror
+set ytics nomirror
+plot 'sgemm.dat' u  1:($1**6/$3 * 2e-9) w lp title "cublas nn", \
+     '' u 1:($1**6/$2 * 2e-9) w lp title "magma nn", \
+     '' u 1:($1**6/$7 * 2e-9) w lp title "tdot nt", \
+     '' u 1:($1**6/$8 * 2e-9) w lp title "test nt"

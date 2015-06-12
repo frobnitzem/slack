@@ -27,7 +27,6 @@
  * as well as the dynamic current nref in MemSpace.  The dynamic one
  * requires a mutex.  A useful improvement would be to modify Quark
  * to use the memory locations (and refcounts?) in Node info structures.
- *
  */
 
 #include <ast.h>
@@ -39,16 +38,6 @@
 
 // Add a subexpression to the running queue.
 static struct Node *add_q(Quark *q, Ast *a, MemSpace *mem, Map *vis);
-
-// returns a Map from (Ast *) to (struct Node *)
-Map *zip_ast(Ast *a, struct Node **n, SMap *named);
-
-struct Node {
-    Ast *op;
-    Tensor *val;
-    int nref;
-    int visited;
-};
 
 Tensor *run_quark(Ast *a, int nthreads, MemSpace *mem, SMap *named) {
     Map *vis;
@@ -278,68 +267,3 @@ static struct Node *add_q(Quark *q, Ast *op, MemSpace *mem, Map *vis) {
     }
     return n;
 }
-
-/**************** Ast linking and refcounting routines. *************/
-struct Node *node_ctor(Ast *a, int nref) {
-    struct Node *n = malloc(sizeof(struct Node));
-    n->op = a;
-    n->val = NULL;
-    n->nref = nref;
-    n->visited = 0;
-    return n;
-}
-
-// This always returns a Node, whose value is guaranteed not to be a ref.
-static struct Node *zip_ast_rec(Ast *a, SMap *defs, Map *out) {
-    Ast **t;
-    int i, m;
-    struct Node *n = map_get(out, &a);
-
-    if(n == (struct Node *)out) {
-        printf("Error! input graph contains a cycle at elem %p\n", a);
-        return NULL;
-    } else if(n != NULL) { // ref. already added.
-        n->nref++;
-        return n;
-    }
-
-    map_put(out, &a, out); // insert bad ref to detect cycles
-
-    if(a->type == TRef) {
-        Ast *b = smap_get(defs, a->ref);
-        if(b == NULL) {
-            printf("Error! Undefined variable, %s\n", a->ref);
-            return NULL;
-        }
-        if( (n = zip_ast_rec(b, defs, out)) == NULL) {
-            return NULL;
-        }
-        map_put(out, &a, n);
-        return n;
-    }
-    m = ast_children(a, &t);
-    for(i=0; i<m; i++) { // replace child ptrs
-        if(zip_ast_rec(t[i], defs, out) == NULL) {
-            return NULL;
-        }
-    }
-
-    n = node_ctor(a, 1);
-    map_put(out, &a, n);
-    return n;
-}
-
-// TODO: Improve error reporting by setting problematic node on return...
-Map *zip_ast(Ast *a, struct Node **n, SMap *named) {
-    struct Node *r;
-    Map *out = map_ctor(256, sizeof(void *));
-
-    if( (r = zip_ast_rec(a, named, out)) == NULL) {
-        map_dtor(&out);
-        return NULL;
-    }
-    *n = r;
-
-    return out;
-}
-

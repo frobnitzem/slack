@@ -1,0 +1,35 @@
+# set terminal png transparent nocrop enhanced size 450,320 font "arial,8" 
+# set output 'histograms.5.png'
+#
+set term postscript eps enhanced mono lw 2 size 5,3 "Times" 24
+set output "pct.eps"
+
+set border 3 front linewidth 1
+set boxwidth 0.75 absolute
+#set style fill   solid 1.00 border lt -1
+set style line 2 lc rgb 'black' lt 1 lw 1
+set style fill pattern border # lc rgb 000000 lt 1
+set grid nopolar
+set grid noxtics nomxtics ytics nomytics noztics nomztics \
+ nox2tics nomx2tics noy2tics nomy2tics nocbtics nomcbtics
+set grid layerdefault   lt 0 linewidth 0.500,  lt 0 linewidth 0.500
+set key outside right top vertical Left reverse noenhanced autotitle columnhead nobox
+set key invert samplen 4 spacing 1 width 0 height 0 
+set style histogram rowstacked title textcolor lt -1
+
+set style data histograms
+#set xtics border in scale 0,0 nomirror rotate by -55 offset 0,0
+#set xtics norangelimit
+#set xtics ()
+#set xtics ("" 4, "" 8, "" 12, "" 16, "" 20, "" 24, "" 28, "" 32, "" 36, "" 40, "" 44, "" 48, "" 52, "" 56, "" 60, "" 64, "" 72, "" 80, "" 88, "" 96, "" 104, "" 112, "" 120)
+#unset ytics
+set ytics 0.2 nomirror
+#set grid y
+set format y ""
+#set title "Emulated Tensor Product Time"
+set ylabel "% of total" 
+set yrange [0:1] noreverse nowriteback
+plot 'times.dat' using ($2/(2*$2+$3+$4)):xtic(1) t "transpose(A)" ls 2, \
+     '' using ($3/(2*$2+$3+$4)) title "transpose(B)" ls 2, \
+     '' using ($2/(2*$2+$3+$4)) title "transpose(C)" ls 2, \
+     '' using ($4/(2*$2+$3+$4)) title "SGEMM" ls 2,

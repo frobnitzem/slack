@@ -7,21 +7,32 @@
 # all the dependencies and recompiles on source changes,
 # which was the original idea anyway.
 
-QUARK=$(HOME)/build/quark-0.9.0
+########### configurable options
 
 CC=gcc
 LD=gcc
-#CFLAGS=-ggdb -I$(PWD)/include
-CFLAGS=-ggdb -I/sw/include -I$(PWD)/include
-#CFLAGS += -DYYDEBUG
-#CFLAGS += $(shell pkg-config gnutls --cflags) -DSRCDIR=$(PWD)
-CFLAGS += -I$(QUARK)
+CFLAGS=-ggdb -I$(PWD)/include
+#CFLAGS=-ggdb -I/sw/include -I$(PWD)/include
 
-#LDFLAGS=-lixp -lpthread -rdynamic -ldl
-LDFLAGS=-L/sw/lib -lpthread
-#LDFLAGS += $(shell pkg-config gnutls --libs)
-LDFLAGS += -L$(QUARK) -lquark
-LDFLAGS += -framework Accelerate
+LDFLAGS=-lpthread
+
+#CFLAGS += -DYYDEBUG
+
+# OSX Accelerate
+#LDFLAGS += -framework Accelerate
+# Generic BLAS
+LDFLAGS += -lblas -llapack
+
+# use QUARK
+#QUARK=$(HOME)/build/quark-0.9.0
+#CFLAGS += -I$(QUARK) -DQUARK
+#LDFLAGS += -L$(QUARK) -lquark
+
+# use STARPU
+#CFLAGS += $(shell pkg-config --cflags starpu-1.1) -DSTARPU
+#LDFLAGS += $(shell pkg-config --libs starpu-1.1)
+
+############ end config options
 
 BIN_OBJ=$(PWD)/bin/slack.o
 LIB=$(PWD)/lib/libslack.a
@@ -67,9 +78,12 @@ $(PWD)/lib/lib.a:	lib
 
 $(LIB):		$(LIBS)
 	rm -f $@
-	libtool -static -o $@ $^
-	#ar cqT $@ $^
+	#libtool -static -o $@ $^
+	ar cqT $@ $^
 
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $^
+
+%.o: %.cu
+	nvcc $(CFLAGS) $< -c $@
 

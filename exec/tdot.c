@@ -8,6 +8,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #define BINARY_OP(a,b) ((a) * (b))
 

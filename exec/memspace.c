@@ -1,5 +1,39 @@
-// Copyright David M. Rogers, 2015
-// This code is released under terms of the GNU GPL v3
+/*    Copyright (C) David M. Rogers, 2015
+ *    
+ *    David M. Rogers <predictivestatmech@gmail.com>
+ *    Nonequilibrium Stat. Mech. Research Group
+ *    Department of Chemistry
+ *    University of South Florida
+ *
+ *    This file is part of USF-slack.
+ *
+ *    This version of slack is free software: you can redistribute
+ *    it and/or modify it under the terms of the GNU General Public
+ *    License as published by the Free Software Foundation, either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    USF-slack is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    in the LICENSE file at the top of USF-slack's source tree.
+ *    If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The memory management strategy of the interpreter deserves some comment.
+ * Hand-written code usually uses a minimum number of memory
+ * areas, and sends intermediate results to them, as in a circular
+ * buffer.  We can accomplish the same thing here by maintaining
+ * a list of active memory spaces during interpretation.
+ *
+ * The resulting exec function has type:
+ *
+ * Ast_Tensor -> ST MemSpace Ast_Lit_Tensor
+ *
+ * The binding expressions are refcounted.
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         for(n=0; n<10; n++) {
-          if( (t = run_quark(a, nthreads, mem, defs)) == NULL) {
+          if( (t = exec_ast(a, nthreads, mem, defs)) == NULL) {
             printf("Error executing dag.\n");
             return 1;
           }
