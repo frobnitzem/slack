@@ -290,8 +290,8 @@ The most simplistic implementation is to combine all $n_C$ output indices
 of $C$ into one omnibus dimension, and all $n$ inner indices
 into another.  Each iteration of a double-loop decodes the corresponding
 locations in $A$, $B$, and $C$.  The timings for this implementation, using
-1 CUDA thread per output location are almost equivalent to the transpose-sandwiched
-version.
+1 CUDA thread per output location peak around 10 Gflops and are in most cases
+worse than the transpose-sandwiched version.
 
   A much better performance is achieved by adopting the MAGMA library
 strategy of loop nesting.\cite{magma}  There, a $T_A \times T_B$ block of threads each
