@@ -4,23 +4,32 @@ SLACK: Standard Linear Array Computation Kernels
 This library provides a multi-level interface to high-performance
 linear array computations.
 
-Dependencies:
+Dependencies for generated kernels in gen/:
 
  1. CUDA developer kit version 5 or above & GPU for program execution.
    - Which itself requires GCC.
  2. Python 2.4 or above (code generators).
- 3. Flex/Bison lexer and parser.
- 4. StarPU distributed task scheduling framework.
+
+Dependencies for LaTeX to tensor exection engine (slack.c):
+ 1. Flex/Bison lexer and parser.
+ 2. QUARK scheduling library (see Makefile)
+ * non-quark, serial version also not yet implemented
+ * StarPU distributed task scheduling framework backend is incomplete
 
 Recommended:
  * A LaTeX distribution for typesetting.
+ * graphviz and inkscape for drawing pretty graphs (slack -v)
+   (actual command in print_dot.c is "dot -Tsvg -o %s.svg %s && inkview %s.svg")
 
-Installation:
+Running slack (no installation yet):
  1. Edit Makefile
  2. run make
+ 3. run bin/slack -v examples/singles.tex
+ - or -
  3. reference "include/slack.h" and link against lib/libslack.a
     in your own code.
-   * See examples in bin/*.c
+   * See examples in bin/*.c and examples/*.tex
+
 
 This version of SLACK is Copyright (C) David M. Rogers, 2015
   
