@@ -189,9 +189,14 @@ void tensdot(const double beta,
             }
 
             // ck what boundaries next J-step hits
-            for(int i=0; i<n-1; i++) { // loop over inner indices
+            /*for(int i=0; i<n-1; i++) { // loop over inner indices
                 Aind[ain[i]] = (Aind[ain[i]] + !((J+1)%inb[i]))%sa[ain[i]];
                 Bind[bin[i]] = (Bind[bin[i]] + !((J+1)%inb[i]))%sb[bin[i]];
+            }*/
+            // Perform add-1 with carry.
+            for(int i=n-2; i >= 0 && (J+1) % inb[i] == 0; i--) {
+                Aind[ain[i]] = (Aind[ain[i]] + 1) % sa[ain[i]];
+                Bind[bin[i]] = (Bind[bin[i]] + 1) % sb[bin[i]];
             }
         }
         //printf("Output %d = %f\n", I, acc);
