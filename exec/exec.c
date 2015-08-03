@@ -135,3 +135,19 @@ Map *zip_ast(Ast *a, struct Node **n, SMap *named) {
     return out;
 }
 
+
+Map *zip_ast_n(int n, Ast **a, struct Node **node, SMap *named) {
+    struct Node *r;                                           
+    int i;
+    Map *out = map_ctor(256, sizeof(void *));
+
+    for(i=0; i<n; i++) {
+      if( (r = zip_ast_rec(a[i], named, out)) == NULL) {
+        map_dtor(&out);
+        return NULL;
+      }
+      node[i] = r;
+    }
+    
+    return out;
+}

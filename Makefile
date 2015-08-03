@@ -9,9 +9,9 @@
 
 ########### configurable options
 
-CC=gcc
-LD=gcc
-CFLAGS=-ggdb -I$(PWD)/include
+CC=icc
+LD=icc
+CFLAGS=-ggdb -fPIC -I$(PWD)/include
 #CFLAGS=-ggdb -I/sw/include -I$(PWD)/include
 
 LDFLAGS=-lpthread
@@ -24,9 +24,10 @@ LDFLAGS=-lpthread
 LDFLAGS += -lblas -llapack
 
 # use QUARK
-#QUARK=$(HOME)/build/quark-0.9.0
-#CFLAGS += -I$(QUARK) -DQUARK
-#LDFLAGS += -L$(QUARK) -lquark
+QUARK=$(HOME)/build/quark-0.9.0
+CFLAGS += -I$(QUARK) -DQUARK
+LDFLAGS += -L$(QUARK) -lquark
+export QUARK
 
 # use STARPU
 #CFLAGS += $(shell pkg-config --cflags starpu-1.1) -DSTARPU

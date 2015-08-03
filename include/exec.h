@@ -9,6 +9,7 @@
 #ifdef QUARK
 #define exec_ast run_quark
 Tensor *run_quark(Ast *a, int nthreads, MemSpace *mem, SMap *named);
+int run_quark_n(int n, void **names, int nthreads, MemSpace *mem, SMap *named);
 #else
 #define exec_ast run_seq
 Tensor *run_seq(Ast *a, int nthreads, MemSpace *mem, SMap *named);
@@ -23,6 +24,7 @@ struct Node {
 
 // returns a Map from (Ast *) to (struct Node *)
 Map *zip_ast(Ast *a, struct Node **n, SMap *named);
+Map *zip_ast_n(int n, Ast **a, struct Node **node, SMap *named);
 struct Node *node_ctor(Ast *a, int nref);
 
 /*

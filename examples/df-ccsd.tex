@@ -1,4 +1,5 @@
-"result" &= (R^{ab}_{ij}, "w1"^a_i) \\
+%"result"^{ab}_{ij} &= R^{ab}_{ij} \\
+%"result"_{ai} &= "w1"_{ai} \\
 R^{ab}_{ij} &= \sum_Q "Uvo"^Q_{ai} "Uvo"^Q_{bj} + A^{ab}_{ij} + B^{ab}_{ij}
               + 0.5 C^{ab}_{ij} + 0.5 C^{ba}_{ji}
               +     C^{ab}_{ji} +     C^{ba}_{ij}
@@ -43,15 +44,15 @@ u^{pq}_{rs} &= 2 t^{pq}_{rs} - t^{qp}_{rs} \\
 "A1"^a_i &=  \sum_{dQ} \sum_{kc} u^{cd}_{ki} "Uov"^Q_{kc} "Uvv"^Q_{ad} \\
 "B1"^a_i &= -\sum_{klc} \sum_Q "Uoo"^Q_{ki} "Uov"^Q_{lc} u^{ac}_{kl} \\
 "C1"^a_i &=  \sum_{kc} "Fia"_{kc} u^{ac}_{ik} \\
+"Uvo"^Q_{ai} &= "Uov"^Q_{ia} \\
 %
 % Inputs:
 %
+t^{ab}_{ij} = rand^{ab}_{ij} (36,36,4,4) \\
 "Fij"_{ij} = rand_{ij} (4,4) \\
 "Fia"_{ij} = rand_{ij} (4,36) \\
 "Fai"_{ij} = rand_{ij} (36,4) \\
 "Fab"^{ab} = rand^{ab} (36,36) \\
-t^{ab}_{ij} = rand^{ab}_{ij} (36,36,4,4) \\
-"Uoo"_{ij} = rand_{ij} (118,4,4) \\
-"Uvv"^{ab} = rand^{ab} (118,36,36) \\
-"Uov"_{ia} = rand_{ia} (118,4,36) \\
-"Uvo"_{ai} = rand_{ai} (118,36,4)
+"Uoo"^Q_{ij} = rand^Q_{ij} (118,4,4) \\
+"Uov"^Q_{ia} = rand^Q_{ia} (118,4,36) \\
+"Uvv"^{Qab} = rand^{Qab} (118,36,36)
