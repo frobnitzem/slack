@@ -191,6 +191,7 @@ void *reserve_block(MemSpace *mem, size_t sz, int nref) {
     } else {
         mem->used += sz;
         r.best = malloc(sz);
+	memset(r.best, 0, sz);
         struct Block *b = block_ctor(nref, sz);
 
         map_put(mem->m, &r.best, b);

@@ -61,6 +61,41 @@ Tensor *run_quark(Ast *a, int nthreads, MemSpace *mem, SMap *named) {
     return ret;
 }
 
+// stores outputs in **names
+int run_quark_n(int n, void **names, int nthreads, MemSpace *mem, SMap *named) {
+    Map *vis;
+    Quark *q;
+    struct Node *node[n];
+    int i;
+
+    // Lookup Ast-s from names.
+    for(i=0; i<n; i++) {
+	char *x = names[i];
+	if( (names[i] = smap_get(named, x)) == NULL) {
+	    printf("Error: %s not defined.\n", x);
+	    return 1;
+	}
+    }
+    if( (vis = zip_ast_n(n, (Ast **)names, node, named)) == NULL) {
+        printf("Error in zip_ast.\n");
+        return 1;
+    }
+
+    q = QUARK_New(nthreads);
+    for(i=0; i<n; i++) {
+	add_q(q, node[i]->op, mem, vis); // have to use n->op, in case a->type == TRef
+    }
+    // to re-run, set all visited = 0, val = NULL
+    //QUARK_Barrier(q);
+    QUARK_Delete(q);
+
+    for(i=0; i<n; i++) {
+	names[i] = node[i]->val; // extract location of final output tensor
+    }
+    map_dtor(&vis);
+    return 0;
+}
+
 // get output shape of tdot
 int *get_dot_shape(struct Dot *dot, Tensor *a, Tensor *b) {
     int *sz = malloc(sizeof(int)*dot->nc);
