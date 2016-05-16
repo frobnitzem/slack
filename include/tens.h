@@ -9,7 +9,7 @@ typedef struct {
     uint32_t n;      // The logical dimension of the array.
     uint32_t len;    // prod(shape)
     double *x;         // Block of memory holding the array.
-    int shape[0];    // A list of n integers, stating the
+    uint16_t shape[0];    // A list of n integers, stating the
                      //    length along each dimension
 } Tensor;
 

@@ -32,19 +32,21 @@ library to compute general sums and products over multi-dimensional arrays (tens
 Using only 3 low-level functions, the API at once generalizes
 core BLAS1-3 as well as eliminates the need for most tensor transpositions.
 Despite their relatively low operation count, we show that these transposition steps
-are actually performance limiting in most typical use cases for BLAS on tensors.
+can become performance limiting in typical use cases for BLAS on tensors.
 The execution of the present API achieves peak performance on the same
 order of magnitude as for vendor-optimized GEMM
 by utilizing a code generator to output CUDA source code for all computational kernels.
 The outline for these kernels is a multi-dimensional generalization
 of the MAGMA BLAS matrix multiplication on GPUs.  Separate
-transpositions steps can be skipped because each kernel allows arbitrary
+transpositions steps can be skipped because every kernel allows arbitrary
 multi-dimensional transpositions of the arguments.
 The library, including its methodology and programming techniques, are
 made available in SLACK.  Future improvements to the library include
 a high-level interface to translate directly from a \LaTeX{}-like equation
 syntax to a data-parallel computation.
 \end{abstract}
+
+\keywords{tensor,blas,transposition,gpu}
 
 \section{ Introduction and Background}
 
@@ -130,9 +132,9 @@ They are therefore a generalization of the core of BLAS levels 1-3
 Section~\ref{s:gen} outlines the operation of the code generator which
 achieves high performance kernels by automatically generating implementation code for
 arbitrary thread block and output tile sizes.
-Section~\ref{s:high} presents the high-level organization used to automatically execute a
-set of tensor algebra operations in parallel, including automatically
-managing intermediate values.
+%Section~\ref{s:high} presents the high-level organization used to automatically execute a
+%set of tensor algebra operations in parallel, including automatically
+%managing intermediate values.
 
   A performance study is presented in Sec.~\ref{s:perf}.  Without optimizing the tile-sizes
 or using texture mapping, the kernels corresponding to SGEMM are about half as fast
@@ -436,6 +438,11 @@ even higher-level interfaces to run sets of {\tt tdot} and {\tt tadd} operations
 output tensors.  A separate paper describes the implementation of a DAG scheduler
 for tensor operations in the SLACK library.
 
+\section*{Acknowledgments}
+  This work was supported by the USF Research Foundation,
+NSF MRI CHE-1531590, and NSF XSede Resource Allocation TG-ASC130043.
+We thank Jeff Hammond for comments on this work.
+
 \bibliographystyle{unsrt}
 \bibliography{lit}
 
@@ -597,11 +604,11 @@ B_{ij}^{ab} &= \sum_{kl} t_{kl}^{ab} \left( \sum_Q M_{ki}^Q M_{lj}^Q
 \end{align}
 was parsed into the expression tree in Fig.~\ref{f:dag}.
 
-\begin{figure}
+\begin{figure*}
 \includegraphics[width=0.9\textwidth]{dag.eps}
 \caption{Initial expression tree parsed from \LaTeX{} source.  Execution order is from bottom to top, with the topmost node representing an output.  Index symbols have been converted to (lexically scoped) integers. Contractions are labeled with $*$ and a list of summation indices.  Named intermediate tensors are indicated with dummy, label nodes (= C[1,2]) etc.}
 \label{f:dag}
-\end{figure}
+\end{figure*}
 
   Next, the nodes of the DAG are transformed into local operations by replacing the index
 labels with local permutation indices.  % using a top-down tree traversal.
@@ -612,7 +619,8 @@ Named intermediates are also linked into their parent at this stage.
   The result will be a DAG of tensor operations,
 \begin{verbatim}
 struct net_tensor {
-  network_ptr *location; // where / how is the tensor accessed
+  network_ptr *location;
+     // where / how is the tensor accessed
   struct tensor *A; // actual data, if local
 };
 
@@ -631,7 +639,8 @@ struct tens_dot {
 };
 
 struct tens_op {
-  enum TensOP type; // 1 = tensor constant, 2 = tens_gen, 3 = tens_dot
+  enum TensOP type; // 1 = tensor constant,
+  				// 2 = tens_gen, 3 = tens_dot
   union {
     struct net_tensor *const; // type = 1
     struct tens_gen *gen; // type = 2
@@ -653,6 +662,9 @@ a {\tt struct tensor} in local memory.  Then two leaves will be submitted to gar
 refcount), and the completed {\tt tens\_dot} will be replaced with the new value.
 
   Eventually, we may augment the tree with information to minimize communication.
+
+\end{document}
+
 
 \subsection{ Reference Tensor Representation}
 
@@ -790,11 +802,11 @@ The code again uses 4 different matrices,
 .
 \end{equation}
 
-\begin{figure}
+\begin{figure*}
 \includegraphics[width=0.9\textwidth]{dag.eps}
 \caption{Initial expression tree parsed from \LaTeX{} source.  Execution order is from bottom to top, with the topmost node representing an output.  Index symbols have been converted to (lexically scoped) integers. Contractions are labeled with $*$ and a list of summation indices.  Named intermediate tensors are indicated with dummy, label nodes (= C[1,2]) etc.}
 \label{f:dag}
-\end{figure}
+\end{figure*}
 
   Next, the nodes of the DAG are transformed into local operations by replacing the index
 labels with local permutation indices.  % using a top-down tree traversal.
@@ -887,3 +899,68 @@ a special flag to the $A$ tensor to note its symmetric storage type.
 
 
 \end{document}
+
+
+  Although the transpositions scale only as $O(N^2)$, while the contraction
+scales formally as $O(N^3)$, both operations are severely limited by memory access times.
+The theoretical maximum host to device memory bandwidth (using PCI-E 3.0 x16) is 16 GB/s.
+Dividing by the three matrices and 8 bytes per float, this limits single-precision matrix multiplication
+to a maximum output speed of 0.67 Gfloats/s.
+%  On-device memory bandwidth is 10x higher, on the order of 100 GB/s.
+However, there are $N^3$ floating point operations
+per matrix multiply, so the GEMM speed (Gflops/s) will be calculated by multiplying the
+output rate by $3 N$.  The peak floating performance of 2000~Gflops/s will only
+be achieved after N=1000.
+For smaller problem sizes, matrix multiplication and transposition
+are both limited by data transfer rates, and will therefore have similar scaling behavior.
+
+  For the usual case, emulating tensor contractions by the transpose-matrix multiply-transpose strategy
+is more than a factor of 3 slower than performing the contraction directly.  In the usual case, most codes
+implement the transpose using simple loops.  This can cause another factor of 10 slow-down because
+their memory access pattern is much worse than the matrix multiplication.
+
+  Two strategies will be pursued to remove this problem to create a direct contraction.  First,
+we will create a code generator to produce kernels for tensor contraction.  Each run of the kernel
+will produce an $nc$-dimensional sub-block of the output tensor.  The size of the nested inner loops
+within the kernel should be as close as possible to the processor's local cache.
+We will base these kernels on the general strategy used by similar kernels within
+the Magma\cite{magma} library (Fig.~\ref{f:mm}).
+A group of threads divide the work of computing an output tile in two different ways.
+First, they pre-fetch large $N\times K$ and $M\times K$ sub-blocks of the two input matrices
+from slower device memory into a faster region shared by all threads.  Next, they each
+compute a different sub-tile of the $N\times M$ output tile.  Finally, each thread outputs
+its own sub-tile.  There are several copying steps in-between to explicitly use thread-local
+memory registers.
+
+  In a general tensor contraction, the pre-fetches will be multidimensional blocks
+from the two input matrices.  These will still be stored in 2-dimensional arrays
+on the device, mirroring the transpose-multiply-transpose strategy.  The difference
+here is that the transpose steps are grouped with the matrix multiplication.
+Thus, the memory need only be moved once instead of 3 times, resulting in at least
+a factor of 3 improvement.
+
+  The second strategy will be to slightly modify existing routines for fast matrix multiplication
+to allow outputting to matrices with 2 strides, instead of the usual single stride (i.e. `ldc').
+This will allow the overall operation will work by picking 2 dimensions to be output matrix-at-a-time
+while looping over all other $nc-2$.
+Matrix multiplication corresponds to a subset of the kernels that could be generated by the first approach.
+Namely, matrix multiplication corresponds to output sub-blocks of the form $(1,1,N,1,M)$, or $(N,M,1,1)$, etc.,
+where only two of the $nc$ output dimensions are not 1.  Since matrix multiplication routines
+derive most of their speed by grouping reads that are stored sequentially in memory,
+the two output strides will be determined based on where the smallest dimension of the two
+input matrices is going.  Four cases are possible.  First, both input matrices may have
+their smallest (sequential) dimension uncontracted -- going to an output.  This corresponds
+to a series of $A B^T$ (Fortran ordering).  Second, input may be contracted and the other
+uncontracted.  This corresponds to a series of $A^T B^T$ or $AB$.  Cases three and four
+occur when both smaller indices are contracted.  If the indices are contracted against one another,
+any outer indices can be chosen to write this as a series of $A^T B$ operations (case three).
+However, the fourth case does not map directly to a matrix operation.
+It corresponds most closely to a series of direct matrix products
+followed by summation, which may pay a huge penalty in storage space.
+
+  Both strategies leverage existing fast kernels for matrix multiplication.  The second
+may be expected to give quick results and perform well when rank of the tensor's smallest
+dimension is large.  However, the code generation strategy covers cases that the second
+strategy misses, including multiple contracted dimensions and small last-dimension sizes.
+It also offers more opportunity for tuning and improvement.
+

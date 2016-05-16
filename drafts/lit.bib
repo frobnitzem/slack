@@ -1,3 +1,12 @@
+@article{edepr13,
+    title = {Accuracy and Efficiency of Coupled-Cluster Theory Using Density Fitting/Cholesky Decomposition, Frozen Natural Orbitals, and a t1‐Transformed Hamiltonian},
+    author = {A. Eugene {DePrince, III} and C. David Sherrill},
+    year = 2013,
+    doi = {10.1021/ct400250u},
+    journal = {J. Chem. Theory Comput.},
+    volume = 9,
+    pages = {2687--2696},
+}
 
 @article{blas,
   author = {C. L. Lawson and R. J. Hanson and R. J. Kincaid and F. T. Krogh},
@@ -116,3 +125,101 @@ year = 2011
   url = "http://www.scipy.org/",
 }
 
+@inbook{tnels15,
+    title = {Generating Efficient Tensor Contractions for {GPUs}},
+    author = {Thomas Nelson and Axel Rivera and Mary
+        Hall and Paul D. Hovland and Elizabeth Jessup and Boyana Norris
+        and Prasanna Balaprakash},
+    booktitle = {Proceedings of The 44th International Conference on Parallel Processing ({ICPP})},
+    year = 2015,
+}
+% redundant
+@misc{arive14,
+    title = {Autotuning Tensor Contraction Computations on {GPUs}},
+    author = {Axel Rivera and Mary Hall Paul D. Hovland and Elizabeth Jessup and Thomas Nelson and Boyana Norris},
+    year = {2014},
+}
+
+@inproceedings{eapra15,
+    title = {Efficient implementation of many-body quantum chemical methods on
+        the {Intel® Xeon Phi™} coprocessor},
+    author = {Edoardo Apr\`{a} and Michael Klemm and Karol Kowalski},
+    series = {SC '14 Proceedings of the International Conference for High
+        Performance Computing, Networking, Storage and Analysis},
+    pages = {674--684},
+    pubisher = {IEEE Press Piscataway, NJ, USA},
+    year = 2014,
+    doi = {10.1109/SC.2014.60},
+}
+
+% High-level phi optimization, O(400) node scaling
+@inbook{eapra15,
+    author = {Edoardo Apr\`{a} and Karol Kowalski and Jeff R. Hammond and
+                Michael Klemm},
+    title = {{NWChem}: Quantum Chemistry Simulations at Scale},
+    booktitle = {High Performance Parallelism Pearls},
+    year = 2015,
+    publisher = {Morgan Kaufmann},
+    pages = {287--306},
+}
+% redundant
+@inproceedings{hshan15,
+  author = {Hongzhang Shan and Samuel Williams and Wibe de Jong and Leonid
+      Oliker},
+  title = {Thread-level parallelization and optimization of {NWChem} for the
+      {Intel MIC} architecture},
+  series = {PMAM '15 Proceedings of the Sixth International Workshop on
+      Programming Models and Applications for Multicores and Manycores},
+  pages = {58--67},
+  publisher = {ACM New York, NY, USA},
+  year = 2015,
+}
+
+@inproceedings{wma10,
+  title = {Acceleration of Streamed Tensor Contraction Expressions on
+      GPGPU-Based Clusters},
+  author = {Wenjing Ma and Krishnamoorthy, S. and Villay, O.  and Kowalski, K.},
+  series = {2010 IEEE International Conference on Cluster Computing ({CLUSTER})},
+  year = 2010,
+  pages = {207--216},
+  doi = {10.1109/CLUSTER.2010.26},
+}
+
+@article{dlyka15,
+    title = {An efficient tensor transpose algorithm for multicore {CPU}, {Intel
+        Xeon Phi}, and {NVidia Tesla GPU}},
+    author = {Dmitry I. Lyakh},
+    journal = {Comput. Phys. Commun.},
+    volume = 189,
+    year = 2015,
+    pages = {84--91},
+    doi = {10.1016/j.cpc.2014.12.013},
+}
+
+% see also: http://arxiv.org/pdf/1409.8608
+@inproceedings{epeis15,
+    title = {On the Performance Prediction of {BLAS}-based Tensor Contractions},
+    author = {Elmar Peise and Diego Fabregat-Traver and Paolo Bientinesi},
+    booktitle = {High Performance Computing Systems. Performance Modeling,
+        Benchmarking, and Simulation},
+    series = {Lecture Notes in Computer Science},
+    volume = 8966,
+    year = 2015,
+    pages = {193--212},
+    publisher = {Springer},
+    doi = {10.1007/978-3-319-17248-4_10},
+}
+
+
+% see also: http://arxiv.org/pdf/1307.2100
+@article{enapo14,
+    title = {Towards an efficient use of the BLAS library for multilinear tensor
+        contractions},
+    author = {Edoardo Di Napoli and Diego Fabregat-Traver and Gregorio
+            Quintana-Ort\'{\i} and Paolo Bientinesi},
+    journal = {Appl. Math. Comput.},
+    volume = 235,
+    year = 2014,
+    pages = {454--468},
+    doi = {10.1016/j.amc.2014.02.051},
+}
