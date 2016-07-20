@@ -1,8 +1,8 @@
 # Plan a parallel copy using n workers into output shape s.
 # The algorithm requires prod(s) to be a multiple of n and
 # works by matching factors from n with those of s,
-# with preference to the left.  This means as many
-# workers as possible for the most sig. dimensions,
+# with preference to the right (for R) or left (for L).
+# This means as many workers as possible for the most sig. dimensions,
 # each doing as many copies as possible on the least sig. ones.
 #
 # The output is a pair of shapes, with the same length as s:
@@ -14,7 +14,7 @@
 
 prod = lambda x: reduce(lambda a,b: a*b, x, 1)
 
-def divide_work(s, n):
+def divide_work(s, n, right_side=True):
     sz = prod(s)
     if n > sz:
         raise ValueError, "Have too many workers."
@@ -25,7 +25,11 @@ def divide_work(s, n):
 
     index = [1 for i in s]
     copy = [i for i in s]
-    for i in range(len(s)):
+
+    pri = range(len(s))
+    if right_side == True:
+        pri = reversed(pri)
+    for i in pri:
         for x in factors(s[i]):
             try:
                 if f[x] > 0: # parallelize this one
