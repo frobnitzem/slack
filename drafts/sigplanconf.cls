@@ -1,1251 +1,1893 @@
-%-----------------------------------------------------------------------------
+% SIG-ALTERNATE.CLS - VERSION 2.8
+% "COMPATIBLE" WITH THE "ACM_PROC_ARTICLE-SP.CLS" V3.2SP
+% Gerald Murray - May 23rd 2012
+% Boris Veytsman - April 23 2013
+% Boris Veytsman - May 12 2013
+% Boris Veytsman - June 09 2013
+% Boris Veytsman - August 12 2013
 %
-%               LaTeX Class/Style File
+% ---- Start of 'updates'  ----
+% Added new permission/copyright statement - BV
+% Changed $10 fee to $15 -- May 2012  --  Gerry
+% Changed $5 fee to $10 --  April 2009 -- Gerry
+% April 22nd. 2009 - Fixed 'Natbib' incompatibility problem - Gerry
+% April 22nd. 2009 - Fixed 'Babel' incompatibility problem - Gerry
+% April 22nd. 2009 - Inserted various bug-fixes and improvements - Gerry
 %
-% Name:         sigplanconf.cls
-% Purpose:      A LaTeX 2e class file for SIGPLAN conference proceedings.
-%               This class file supercedes acm_proc_article-sp,
-%               sig-alternate, and sigplan-proc.
+% To produce Type 1 fonts in the document plus allow for 'normal LaTeX accenting' in the critical areas;
+% title, author block, section-heads, confname, etc. etc. 
+% i.e. the whole purpose of this version update is to NOT resort to 'inelegant accent patches'.
+% After much research, three extra .sty packages were added to the the tail (ae, aecompl, aeguill) to solve,
+% in particular, the accenting problem(s). We _could_ ask authors (via instructions/sample file) to 'include' these in
+% the source .tex file - in the preamble - but if everything is already provided ('behind the scenes' - embedded IN the .cls)
+% then this is less work for authors and also makes everything appear 'vanilla'.
+% NOTE: all 'patchwork accenting" has been commented out (here) and is no longer 'used' in the sample .tex file (either).
+% Gerry June 2007
 %
-% Author:       Paul C. Anagnostopoulos
-%               Windfall Software
-%               978 371-2316
-%               sigplan-style [atsign] acm.org
+% Patch for accenting in conference name/location. Gerry May 3rd. 2007
+% Rule widths changed to .5, author count (>6) fixed, roll-back for Type 3 problem. Gerry March 20th. 2007
+% Changes made to 'modernize' the fontnames but esp. for MikTeX users V2.4/2.5 - Nov. 30th. 2006
+% Updated the \email definition to allow for its use inside of 'shared affiliations' - Nov. 30th. 2006
+% Fixed the 'section number depth value' - Nov. 30th. 2006
 %
-% Created:      12 September 2004
+% Footnotes inside table cells using \minipage (Oct. 2002)
+% Georgia fixed bug in sub-sub-section numbering in paragraphs (July 29th. 2002)
+% JS/GM fix to vertical spacing before Proofs (July 30th. 2002)
 %
-% Revisions:    See end of file.
+% Made the Permission Statement / Conference Info / Copyright Info
+% 'user definable' in the source .tex file OR automatic if
+% not specified.
 %
-%-----------------------------------------------------------------------------
-
-
-\NeedsTeXFormat{LaTeX2e}[1995/12/01]
-\ProvidesClass{sigplanconf}[2010/05/24 v2.4 ACM SIGPLAN Proceedings]
-
-% The following few pages contain LaTeX programming extensions adapted
-% from the ZzTeX macro package.
-
-%                       Token Hackery
-%                       ----- -------
-
-
-\def \@expandaftertwice {\expandafter\expandafter\expandafter}
-\def \@expandafterthrice {\expandafter\expandafter\expandafter\expandafter
-                          \expandafter\expandafter\expandafter}
-
-% This macro discards the next token.
-
-\def \@discardtok #1{}%                                  token
-
-% This macro removes the `pt' following a dimension.
-
-{\catcode `\p = 12 \catcode `\t = 12
-
-\gdef \@remover #1pt{#1}
-
-} % \catcode
-
-% This macro extracts the contents of a macro and returns it as plain text.
-% Usage: \expandafter\@defof \meaning\macro\@mark
-
-\def \@defof #1:->#2\@mark{#2}
-
-%                       Control Sequence Names
-%                       ------- -------- -----
-
-
-\def \@name #1{%                                        {\tokens}
-  \csname \expandafter\@discardtok \string#1\endcsname}
-
-\def \@withname #1#2{%                                  {\command}{\tokens}
-  \expandafter#1\csname \expandafter\@discardtok \string#2\endcsname}
-
-%                       Flags (Booleans)
-%                       ----- ----------
-
-% The boolean literals \@true and \@false are appropriate for use with
-% the \if command, which tests the codes of the next two characters.
-
-\def \@true {TT}
-\def \@false {FL}
-
-\def \@setflag #1=#2{\edef #1{#2}}%              \flag = boolean
-
-%                       IF and Predicates
-%                       -- --- ----------
-
-% A "predicate" is a macro that returns \@true or \@false as its value.
-% Such values are suitable for use with the \if conditional.  For example:
+% Allowance made to switch default fonts between those systems using
+% normal/modern font names and those using 'Type 1' or 'Truetype' fonts.
+% See LINE NUMBER 255 for details.
+% Also provided for enumerated/annotated Corollaries 'surrounded' by
+% enumerated Theorems (line 848).
+% Gerry November 11th. 1999
 %
-%   \if \@oddp{\x} <then-clause> \else <else-clause> \fi
-
-% A predicate can be used with \@setflag as follows:
+% ---- End of 'updates' ----
 %
-%   \@setflag \flag = {<predicate>}
-
-% Here are the predicates for TeX's repertoire of conditional
-% commands.  These might be more appropriately interspersed with
-% other definitions in this module, but what the heck.
-% Some additional "obvious" predicates are defined.
-
-\def \@eqlp   #1#2{\ifnum #1 = #2\@true \else \@false \fi}
-\def \@neqlp  #1#2{\ifnum #1 = #2\@false \else \@true \fi}
-\def \@lssp   #1#2{\ifnum #1 < #2\@true \else \@false \fi}
-\def \@gtrp   #1#2{\ifnum #1 > #2\@true \else \@false \fi}
-\def \@zerop  #1{\ifnum #1 = 0\@true \else \@false \fi}
-\def \@onep   #1{\ifnum #1 = 1\@true \else \@false \fi}
-\def \@posp   #1{\ifnum #1 > 0\@true \else \@false \fi}
-\def \@negp   #1{\ifnum #1 < 0\@true \else \@false \fi}
-\def \@oddp   #1{\ifodd #1\@true \else \@false \fi}
-\def \@evenp  #1{\ifodd #1\@false \else \@true \fi}
-\def \@rangep #1#2#3{\if \@orp{\@lssp{#1}{#2}}{\@gtrp{#1}{#3}}\@false \else
-                                                          \@true \fi}
-\def \@tensp  #1{\@rangep{#1}{10}{19}}
-
-\def \@dimeqlp   #1#2{\ifdim #1 = #2\@true \else \@false \fi}
-\def \@dimneqlp  #1#2{\ifdim #1 = #2\@false \else \@true \fi}
-\def \@dimlssp   #1#2{\ifdim #1 < #2\@true \else \@false \fi}
-\def \@dimgtrp   #1#2{\ifdim #1 > #2\@true \else \@false \fi}
-\def \@dimzerop  #1{\ifdim #1 = 0pt\@true \else \@false \fi}
-\def \@dimposp   #1{\ifdim #1 > 0pt\@true \else \@false \fi}
-\def \@dimnegp   #1{\ifdim #1 < 0pt\@true \else \@false \fi}
-
-\def \@vmodep     {\ifvmode \@true \else \@false \fi}
-\def \@hmodep     {\ifhmode \@true \else \@false \fi}
-\def \@mathmodep  {\ifmmode \@true \else \@false \fi}
-\def \@textmodep  {\ifmmode \@false \else \@true \fi}
-\def \@innermodep {\ifinner \@true \else \@false \fi}
-
-\long\def \@codeeqlp #1#2{\if #1#2\@true \else \@false \fi}
-
-\long\def \@cateqlp #1#2{\ifcat #1#2\@true \else \@false \fi}
-
-\long\def \@tokeqlp  #1#2{\ifx #1#2\@true \else \@false \fi}
-\long\def \@xtokeqlp #1#2{\expandafter\ifx #1#2\@true \else \@false \fi}
-
-\long\def \@definedp #1{%
-  \expandafter\ifx \csname \expandafter\@discardtok \string#1\endcsname
-                   \relax \@false \else \@true \fi}
-
-\long\def \@undefinedp #1{%
-  \expandafter\ifx \csname \expandafter\@discardtok \string#1\endcsname
-                   \relax \@true \else \@false \fi}
-
-\def \@emptydefp #1{\ifx #1\@empty \@true \else \@false \fi}%       {\name}
-
-\let \@emptylistp = \@emptydefp
-
-\long\def \@emptyargp #1{%                               {#n}
-  \@empargp #1\@empargq\@mark}
-\long\def \@empargp #1#2\@mark{%
-  \ifx #1\@empargq \@true \else \@false \fi}
-\def \@empargq {\@empargq}
-
-\def \@emptytoksp #1{%                                   {\tokenreg}
-  \expandafter\@emptoksp \the#1\@mark}
-
-\long\def \@emptoksp #1\@mark{\@emptyargp{#1}}
-
-\def \@voidboxp #1{\ifvoid #1\@true \else \@false \fi}
-\def \@hboxp #1{\ifhbox #1\@true \else \@false \fi}
-\def \@vboxp #1{\ifvbox #1\@true \else \@false \fi}
-
-\def \@eofp #1{\ifeof #1\@true \else \@false \fi}
-
-
-% Flags can also be used as predicates, as in:
+\def\fileversion{v2.9}          % for ACM's tracking purposes
+\def\filedate{August 12, 2013}    % Gerry Murray's tracking data
+\def\docdate {\filedate}
+\usepackage{epsfig}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+% Need this for accents in Arial/Helvetica
+%\usepackage[T1]{fontenc}  % Gerry March 12, 2007 - causes Type 3 problems (body text)
+%\usepackage{textcomp}
 %
-%   \if \flaga <then-clause> \else <else-clause> \fi
+% SIG-ALTERNATE DOCUMENT STYLE
+% G.K.M. Tobin August-October 1999
+%    adapted from ARTICLE document style by Ken Traub, Olin Shivers
+%    also using elements of esub2acm.cls
+% HEAVILY MODIFIED, SUBSEQUENTLY, BY GERRY MURRAY 2000
+% ARTICLE DOCUMENT STYLE -- Released 16 March 1988
+%    for LaTeX version 2.09
+% Copyright (C) 1988 by Leslie Lamport
+%
+%
+%%% sig-alternate.cls is an 'ALTERNATE' document style for producing
+%%% two-column camera-ready pages for ACM conferences.
+%%% THIS FILE DOES NOT STRICTLY ADHERE TO THE SIGS (BOARD-ENDORSED)
+%%% PROCEEDINGS STYLE. It has been designed to produce a 'tighter'
+%%% paper in response to concerns over page budgets.
+%%% The main features of this style are:
+%%%
+%%% 1)  Two columns.
+%%% 2)  Side and top margins of 4.5pc, bottom margin of 6pc, column gutter of
+%%%     2pc, hence columns are 20pc wide and 55.5pc tall.  (6pc =3D 1in, approx)
+%%% 3)  First page has title information, and an extra 6pc of space at the
+%%%     bottom of the first column for the ACM copyright notice.
+%%% 4)  Text is 9pt on 10pt baselines; titles (except main) are 9pt bold.
+%%%
+%%%
+%%% There are a few restrictions you must observe:
+%%%
+%%% 1)  You cannot change the font size; ACM wants you to use 9pt.
+%%% 3)  You must start your paper with the \maketitle command.  Prior to the
+%%%     \maketitle you must have \title and \author commands.  If you have a
+%%%     \date command it will be ignored; no date appears on the paper, since
+%%%     the proceedings will have a date on the front cover.
+%%% 4)  Marginal paragraphs, tables of contents, lists of figures and tables,
+%%%     and page headings are all forbidden.
+%%% 5)  The `figure' environment will produce a figure one column wide; if you
+%%%     want one that is two columns wide, use `figure*'.
+%%%
+%
+%%% Copyright Space:
+%%% This style automatically reserves 1" blank space at the bottom of page 1/
+%%% column 1.  This space can optionally be filled with some text using the
+%%% \toappear{...} command.  If used, this command must be BEFORE the \maketitle
+%%% command.  If this command is defined AND [preprint] is on, then the
+%%% space is filled with the {...} text (at the bottom); otherwise, it is
+%%% blank.  If you use \toappearbox{...} instead of \toappear{...} then a
+%%% box will be drawn around the text (if [preprint] is on).
+%%%
+%%% A typical usage looks like this:
+%%%     \toappear{To appear in the Ninth AES Conference on Medievil Lithuanian
+%%%               Embalming Technique, June 1991, Alfaretta, Georgia.}
+%%% This will be included in the preprint, and left out of the conference
+%%% version.
+%%%
+%%% WARNING:
+%%% Some dvi-ps converters heuristically allow chars to drift from their
+%%% true positions a few pixels. This may be noticeable with the 9pt sans-serif
+%%% bold font used for section headers.
+%%% You may turn this hackery off via the -e option:
+%%%     dvips -e 0 foo.dvi >foo.ps
+%%%
+\typeout{Document Class 'sig-alternate' <9th June '13>.  Modified by
+  G.K.M. Tobin/Gerry Murray/Boris Veytsman}
+\typeout{Based in part upon document Style `acmconf' <22 May 89>. Hacked 4/91 by}
+\typeout{shivers@cs.cmu.edu, 4/93 by theobald@cs.mcgill.ca}
+\typeout{Excerpts were taken from (Journal Style) 'esub2acm.cls'.}
+\typeout{****** Bugs/comments/suggestions/technicalities to Gerry Murray -- murray@hq.acm.org ******}
+\typeout{Questions on the style, SIGS policies, etc. to Adrienne Griscti griscti@acm.org}
 
+% New option code by BV
 
-% Now here we have predicates for the common logical operators.
+\newcount\ACM@basesize
+\ACM@basesize=9\relax
+\DeclareOption{9pt}{\ACM@basesize=9\relax}
+\DeclareOption{10pt}{\ACM@basesize=10\relax}
+\DeclareOption{11pt}{\ClassError{sig-alternate}{The `11pt' option is
+    not allowed}{sig-alternate now exists in 9pt and 10pt versions only}}
+\DeclareOption{12pt}{\ClassError{sig-alternate}{The `12pt' option is
+    not allowed}{sig-alternate now exists in 9pt and 10pt versions only}}
 
-\def \@notp #1{\if #1\@false \else \@true \fi}
-
-\def \@andp #1#2{\if #1%
-                  \if #2\@true \else \@false \fi
-                \else
-                  \@false
-                \fi}
-
-\def \@orp #1#2{\if #1%
-                 \@true
-               \else
-                 \if #2\@true \else \@false \fi
-               \fi}
-
-\def \@xorp #1#2{\if #1%
-                  \if #2\@false \else \@true \fi
-                \else
-                  \if #2\@true \else \@false \fi
-                \fi}
-
-%                       Arithmetic
-%                       ----------
-
-\def \@increment #1{\advance #1 by 1\relax}%             {\count}
-
-\def \@decrement #1{\advance #1 by -1\relax}%            {\count}
-
-%                       Options
-%                       -------
-
-
-\@setflag \@authoryear = \@false
-\@setflag \@blockstyle = \@false
-\@setflag \@copyrightwanted = \@true
-\@setflag \@explicitsize = \@false
-\@setflag \@mathtime = \@false
-\@setflag \@natbib = \@true
-\@setflag \@ninepoint = \@true
-\newcount{\@numheaddepth} \@numheaddepth = 3
-\@setflag \@onecolumn = \@false
-\@setflag \@preprint = \@false
-\@setflag \@reprint = \@false
-\@setflag \@tenpoint = \@false
-\@setflag \@times = \@false
-
-% Note that all the dangerous article class options are trapped.
-
-\DeclareOption{9pt}{\@setflag \@ninepoint = \@true
-                    \@setflag \@explicitsize = \@true}
-
-\DeclareOption{10pt}{\PassOptionsToClass{10pt}{article}%
-                     \@setflag \@ninepoint = \@false
-                     \@setflag \@tenpoint = \@true
-                     \@setflag \@explicitsize = \@true}
-
-\DeclareOption{11pt}{\PassOptionsToClass{11pt}{article}%
-                     \@setflag \@ninepoint = \@false
-                     \@setflag \@explicitsize = \@true}
-
-\DeclareOption{12pt}{\@unsupportedoption{12pt}}
-
-\DeclareOption{a4paper}{\@unsupportedoption{a4paper}}
-
-\DeclareOption{a5paper}{\@unsupportedoption{a5paper}}
-
-\DeclareOption{authoryear}{\@setflag \@authoryear = \@true}
-
-\DeclareOption{b5paper}{\@unsupportedoption{b5paper}}
-
-\DeclareOption{blockstyle}{\@setflag \@blockstyle = \@true}
-
-\DeclareOption{cm}{\@setflag \@times = \@false}
-
-\DeclareOption{computermodern}{\@setflag \@times = \@false}
-
-\DeclareOption{executivepaper}{\@unsupportedoption{executivepaper}}
-
-\DeclareOption{indentedstyle}{\@setflag \@blockstyle = \@false}
-
-\DeclareOption{landscape}{\@unsupportedoption{landscape}}
-
-\DeclareOption{legalpaper}{\@unsupportedoption{legalpaper}}
-
-\DeclareOption{letterpaper}{\@unsupportedoption{letterpaper}}
-
-\DeclareOption{mathtime}{\@setflag \@mathtime = \@true}
-
-\DeclareOption{natbib}{\@setflag \@natbib = \@true}
-
-\DeclareOption{nonatbib}{\@setflag \@natbib = \@false}
-
-\DeclareOption{nocopyrightspace}{\@setflag \@copyrightwanted = \@false}
-
-\DeclareOption{notitlepage}{\@unsupportedoption{notitlepage}}
-
-\DeclareOption{numberedpars}{\@numheaddepth = 4}
-
-\DeclareOption{numbers}{\@setflag \@authoryear = \@false}
-
-%%%\DeclareOption{onecolumn}{\@setflag \@onecolumn = \@true}
-
-\DeclareOption{preprint}{\@setflag \@preprint = \@true}
-
-\DeclareOption{reprint}{\@setflag \@reprint = \@true}
-
-\DeclareOption{times}{\@setflag \@times = \@true}
-
-\DeclareOption{titlepage}{\@unsupportedoption{titlepage}}
-
-\DeclareOption{twocolumn}{\@setflag \@onecolumn = \@false}
-
-\DeclareOption*{\PassOptionsToClass{\CurrentOption}{article}}
-
-\ExecuteOptions{9pt,indentedstyle,times}
-\@setflag \@explicitsize = \@false
+\ExecuteOptions{9pt}
 \ProcessOptions
 
-\if \@onecolumn
-  \if \@notp{\@explicitsize}%
-    \@setflag \@ninepoint = \@false
-    \PassOptionsToClass{11pt}{article}%
-  \fi
-  \PassOptionsToClass{twoside,onecolumn}{article}
-\else
-  \PassOptionsToClass{twoside,twocolumn}{article}
+
+\let\@concepts\@empty
+% Support for CCSXML file
+\RequirePackage{comment}
+\excludecomment{CCSXML}
+
+% New concepts scheme
+%
+% The first argument is the significance, the
+% second is the concept(s)
+%
+\newcommand\ccsdesc[2][100]{%
+  \ccsdesc@parse#1~#2~}
+%
+% The parser of the expression Significance~General~Specific
+%
+\def\ccsdesc@parse#1~#2~#3~{%
+  \expandafter\ifx\csname CCS@#2\endcsname\relax
+    \expandafter\gdef\csname CCS@#2\endcsname{\textbullet\textbf{#2} $\to$ }%
+  \g@addto@macro{\@concepts}{\csname CCS@#2\endcsname}\fi
+  \expandafter\g@addto@macro\expandafter{\csname CCS@#2\endcsname}{%
+    \ifnum#1>499\textbf{#3; }\else
+    \ifnum#1>299\textit{#3; }\else
+    #3; \fi\fi}}
+
+\newcommand\printccsdesc{%
+  \ifx\@concepts\@empty\else
+  \if@twocolumn
+    \section*{CCS Concepts}
+    \@concepts
+    \else \small
+    \quotation{\@concepts}%
+    \fi
+    \fi}
+
+
+
+
+\def\doi#1{\def\@doi{#1}}
+\doi{http://dx.doi.org/10.1145/0000000.0000000}
+
+\oddsidemargin 4.5pc
+\evensidemargin 4.5pc
+\advance\oddsidemargin by -1in  % Correct for LaTeX gratuitousness
+\advance\evensidemargin by -1in % Correct for LaTeX gratuitousness
+\marginparwidth 0pt             % Margin pars are not allowed.
+\marginparsep 11pt              % Horizontal space between outer margin and
+                                % marginal note
+
+                                % Top of page:
+\topmargin 4.5pc                % Nominal distance from top of page to top of
+                                % box containing running head.
+\advance\topmargin by -1in      % Correct for LaTeX gratuitousness
+\headheight 0pt                 % Height of box containing running head.
+\headsep 0pt                    % Space between running head and text.
+                                % Bottom of page:
+\footskip 30pt                  % Distance from baseline of box containing foot
+                                % to baseline of last line of text.
+\@ifundefined{footheight}{\newdimen\footheight}{}% this is for LaTeX2e
+\footheight 12pt                % Height of box containing running foot.
+
+%% Must redefine the top margin so there's room for headers and
+%% page numbers if you are using the preprint option. Footers
+%% are OK as is. Olin.
+\advance\topmargin by -37pt     % Leave 37pt above text for headers
+\headheight 12pt                % Height of box containing running head.
+\headsep 25pt                   % Space between running head and text.
+
+\textheight 666pt       % 9 1/4 column height
+\textwidth 42pc         % Width of text line.
+                        % For two-column mode:
+\columnsep 2pc          %    Space between columns
+\columnseprule 0pt      %    Width of rule between columns.
+\hfuzz 1pt              % Allow some variation in column width, otherwise it's
+                        % too hard to typeset in narrow columns.
+
+\ifnum\ACM@basesize=9\relax
+\footnotesep 5.6pt      % Height of strut placed at the beginning of every
+                        % footnote =3D height of normal \footnotesize strut,
+                        % so no extra space between footnotes.
 \fi
-\LoadClass{article}
-
-\def \@unsupportedoption #1{%
-  \ClassError{proc}{The standard '#1' option is not supported.}}
-
-% This can be used with the 'reprint' option to get the final folios.
-
-\def \setpagenumber #1{%
-  \setcounter{page}{#1}}
-
-\AtEndDocument{\label{sigplanconf@finalpage}}
-
-%                       Utilities
-%                       ---------
-
-
-\newcommand{\setvspace}[2]{%
-  #1 = #2
-  \advance #1 by -1\parskip}
-
-%                       Document Parameters
-%                       -------- ----------
-
-
-% Page:
-
-\setlength{\hoffset}{-1in}
-\setlength{\voffset}{-1in}
-
-\setlength{\topmargin}{1in}
-\setlength{\headheight}{0pt}
-\setlength{\headsep}{0pt}
-
-\if \@onecolumn
-  \setlength{\evensidemargin}{.75in}
-  \setlength{\oddsidemargin}{.75in}
-\else
-  \setlength{\evensidemargin}{.75in}
-  \setlength{\oddsidemargin}{.75in}
+\ifnum\ACM@basesize=10\relax
+\footnotesep 6.22pt      % Height of strut placed at the beginning of every
+                        % footnote =3D height of normal \footnotesize strut,
+                        % so no extra space between footnotes.
 \fi
 
-% Text area:
+\skip\footins 8.1pt plus 4pt minus 2pt  % Space between last line of text and
+                                        % top of first footnote.
+\floatsep 11pt plus 2pt minus 2pt       % Space between adjacent floats moved
+                                        % to top or bottom of text page.
+\textfloatsep 18pt plus 2pt minus 4pt   % Space between main text and floats
+                                        % at top or bottom of page.
+\intextsep 11pt plus 2pt minus 2pt      % Space between in-text figures and
+                                        % text.
+\@ifundefined{@maxsep}{\newdimen\@maxsep}{}% this is for LaTeX2e
+\@maxsep 18pt                           % The maximum of \floatsep,
+                                        % \textfloatsep and \intextsep (minus
+                                        % the stretch and shrink).
+\dblfloatsep 11pt plus 2pt minus 2pt    % Same as \floatsep for double-column
+                                        % figures in two-column mode.
+\dbltextfloatsep 18pt plus 2pt minus 4pt% \textfloatsep for double-column
+                                        % floats.
+\@ifundefined{@dblmaxsep}{\newdimen\@dblmaxsep}{}% this is for LaTeX2e
+\@dblmaxsep 18pt                        % The maximum of \dblfloatsep and
+                                        % \dbltexfloatsep.
+\@fptop 0pt plus 1fil    % Stretch at top of float page/column. (Must be
+                         % 0pt plus ...)
+\@fpsep 8pt plus 2fil    % Space between floats on float page/column.
+\@fpbot 0pt plus 1fil    % Stretch at bottom of float page/column. (Must be
+                         % 0pt plus ... )
+\@dblfptop 0pt plus 1fil % Stretch at top of float page. (Must be 0pt plus ...)
+\@dblfpsep 8pt plus 2fil % Space between floats on float page.
+\@dblfpbot 0pt plus 1fil % Stretch at bottom of float page. (Must be
+                         % 0pt plus ... )
+\marginparpush 5pt       % Minimum vertical separation between two marginal
+                         % notes.
 
-\newdimen{\standardtextwidth}
-\setlength{\standardtextwidth}{42pc}
+\parskip 0pt plus 1pt            % Extra vertical space between
+                                % paragraphs.
+\ifnum\ACM@basesize=9\relax
+\parindent 9pt  % GM July 2000 / was 0pt - width of paragraph
+                % indentation.
+\fi
+\ifnum\ACM@basesize=10\relax
+\parindent 10pt  % GM July 2000 / was 0pt - width of paragraph
+                % indentation.
+\fi
+\partopsep 2pt plus 1pt minus 1pt% Extra vertical space, in addition to
+                                 % \parskip and \topsep, added when user
+                                 % leaves blank line before environment.
 
-\if \@onecolumn
-  \setlength{\textwidth}{40.5pc}
-\else
-  \setlength{\textwidth}{\standardtextwidth}
+\@lowpenalty   51       % Produced by \nopagebreak[1] or \nolinebreak[1]
+\@medpenalty  151       % Produced by \nopagebreak[2] or \nolinebreak[2]
+\@highpenalty 301       % Produced by \nopagebreak[3] or \nolinebreak[3]
+
+\@beginparpenalty -\@lowpenalty % Before a list or paragraph environment.
+\@endparpenalty   -\@lowpenalty % After a list or paragraph environment.
+\@itempenalty     -\@lowpenalty % Between list items.
+
+
+\RequirePackage{ifpdf}%
+\ifpdf
+\pdfpagewidth=8.5in
+\pdfpageheight=11in
 \fi
 
-\setlength{\topskip}{8pt}
-\setlength{\columnsep}{2pc}
-\setlength{\textheight}{54.5pc}
 
-% Running foot:
+\lineskip 2pt           % \lineskip is 1pt for all font sizes.
+\normallineskip 2pt
+\def\baselinestretch{1}
 
-\setlength{\footskip}{30pt}
 
-% Paragraphs:
+\ifnum\ACM@basesize=9\relax
+\abovedisplayskip 9pt plus2pt minus4.5pt%
+\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip  \z@ plus3pt%
+\belowdisplayshortskip  5.4pt plus3pt minus3pt%
+\let\@listi\@listI     % Setting of \@listi added 9 Jun 87
 
-\if \@blockstyle
-  \setlength{\parskip}{5pt plus .1pt minus .5pt}
-  \setlength{\parindent}{0pt}
-\else
-  \setlength{\parskip}{0pt}
-  \setlength{\parindent}{12pt}
+\def\small{\@setsize\small{9pt}\viiipt\@viiipt
+\abovedisplayskip 7.6pt plus 3pt minus 4pt%
+\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip \z@ plus2pt%
+\belowdisplayshortskip 3.6pt plus2pt minus 2pt
+\def\@listi{\leftmargin\leftmargini %% Added 22 Dec 87
+\topsep 4pt plus 2pt minus 2pt\parsep 2pt plus 1pt minus 1pt
+\itemsep \parsep}}
+
+\def\footnotesize{\@setsize\footnotesize{9pt}\ixpt\@ixpt
+\abovedisplayskip 6.4pt plus 2pt minus 4pt%
+\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip \z@ plus 1pt%
+\belowdisplayshortskip 2.7pt plus 1pt minus 2pt
+\def\@listi{\leftmargin\leftmargini %% Added 22 Dec 87
+\topsep 3pt plus 1pt minus 1pt\parsep 2pt plus 1pt minus 1pt
+\itemsep \parsep}}
 \fi
 
-\setlength{\lineskip}{.5pt}
-\setlength{\lineskiplimit}{\lineskip}
+\ifnum\ACM@basesize=10\relax
+\abovedisplayskip 10pt plus2pt minus4.5pt%
+\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip  \z@ plus3pt%
+\belowdisplayshortskip  6pt plus3pt minus3pt%
+\let\@listi\@listI     % Setting of \@listi added 9 Jun 87
 
-\frenchspacing
-\pretolerance = 400
-\tolerance = \pretolerance
-\setlength{\emergencystretch}{5pt}
-\clubpenalty = 10000
-\widowpenalty = 10000
-\setlength{\hfuzz}{.5pt}
+\def\small{\@setsize\small{10pt}\ixpt\@ixpt
+\abovedisplayskip 8.5pt plus 3pt minus 4pt%
+\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip \z@ plus2pt%
+\belowdisplayshortskip 4pt plus2pt minus 2pt
+\def\@listi{\leftmargin\leftmargini %% Added 22 Dec 87
+\topsep 4.5pt plus 2pt minus 2pt\parsep 2pt plus 1pt minus 1pt
+\itemsep \parsep}}
 
-% Standard vertical spaces:
+\def\footnotesize{\@setsize\footnotesize{10pt}\xpt\@xpt
+\abovedisplayskip 7.6pt plus 2pt minus 4pt%
+\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip \z@ plus 1pt%
+\belowdisplayshortskip 3.0pt plus 1pt minus 2pt
+\def\@listi{\leftmargin\leftmargini %% Added 22 Dec 87
+\topsep 3.2pt plus 1pt minus 1pt\parsep 2pt plus 1pt minus 1pt
+\itemsep \parsep}}
+\fi
 
-\newskip{\standardvspace}
-\setvspace{\standardvspace}{5pt plus 1pt minus .5pt}
 
-% Margin paragraphs:
+\newcount\aucount
+\newcount\originalaucount
+\newdimen\auwidth
+\auwidth=\textwidth
+\newdimen\auskip
+\newcount\auskipcount
+\newdimen\auskip
+\global\auskip=1pc
+\newdimen\allauboxes
+\allauboxes=\auwidth
+\newtoks\addauthors
+\newcount\addauflag
+\global\addauflag=0 %Haven't shown additional authors yet
 
-\setlength{\marginparwidth}{36pt}
-\setlength{\marginparsep}{2pt}
-\setlength{\marginparpush}{8pt}
+\newtoks\subtitletext
+\gdef\subtitle#1{\subtitletext={#1}}
+
+\gdef\additionalauthors#1{\addauthors={#1}}
+
+\gdef\numberofauthors#1{\global\aucount=#1
+\ifnum\aucount>3\global\originalaucount=\aucount \global\aucount=3\fi %g}  % 3 OK - Gerry March 2007
+\global\auskipcount=\aucount\global\advance\auskipcount by 1
+\global\multiply\auskipcount by 2
+\global\multiply\auskip by \auskipcount
+\global\advance\auwidth by -\auskip
+\global\divide\auwidth by \aucount}
+
+% \and was modified to count the number of authors.  GKMT 12 Aug 1999
+\def\alignauthor{%                  % \begin{tabular}
+\end{tabular}%
+  \begin{tabular}[t]{p{\auwidth}}\centering}%
+
+%  *** NOTE *** NOTE *** NOTE *** NOTE ***
+%  If you have 'font problems' then you may need
+%  to change these, e.g. 'arialb' instead of "arialbd".
+%  Gerry Murray 11/11/1999
+%  *** OR ** comment out block A and activate block B or vice versa.
+% **********************************************
+%
+%  -- Start of block A -- (Type 1 or Truetype fonts)
+%\newfont{\secfnt}{timesbd at 12pt} % was timenrb originally - now is timesbd
+%\newfont{\secit}{timesbi at 12pt}   %13 Jan 00 gkmt
+%\newfont{\subsecfnt}{timesi at 11pt} % was timenrri originally - now is timesi
+%\newfont{\subsecit}{timesbi at 11pt} % 13 Jan 00 gkmt -- was times changed to timesbi gm 2/4/2000
+%                         % because "normal" is italic, "italic" is Roman
+%\newfont{\ttlfnt}{arialbd at 18pt} % was arialb originally - now is arialbd
+%\newfont{\ttlit}{arialbi at 18pt}    % 13 Jan 00 gkmt
+%\newfont{\subttlfnt}{arial at 14pt} % was arialr originally - now is arial
+%\newfont{\subttlit}{ariali at 14pt} % 13 Jan 00 gkmt
+%\newfont{\subttlbf}{arialbd at 14pt}  % 13 Jan 00 gkmt
+%\newfont{\aufnt}{arial at 12pt} % was arialr originally - now is arial
+%\newfont{\auit}{ariali at 12pt} % 13 Jan 00 gkmt
+%\newfont{\affaddr}{arial at 10pt} % was arialr originally - now is arial
+%\newfont{\affaddrit}{ariali at 10pt} %13 Jan 00 gkmt
+%\newfont{\eaddfnt}{arial at 12pt} % was arialr originally - now is arial
+%\newfont{\ixpt}{times at 9pt} % was timenrr originally - now is times
+%\newfont{\confname}{timesi at 8pt} % was timenrri - now is timesi
+%\newfont{\crnotice}{times at 8pt} % was timenrr originally - now is times
+%\newfont{\ninept}{times at 9pt} % was timenrr originally - now is times
+
+% *********************************************
+%  -- End of block A --
+%
+%
+% -- Start of block B -- UPDATED FONT NAMES
+% *********************************************
+% Gerry Murray 11/30/2006
+% *********************************************
+\ifnum\ACM@basesize=9\relax
+\newfont{\secfnt}{ptmb8t at 12pt}
+\newfont{\secit}{ptmbi8t at 12pt}    %13 Jan 00 gkmt
+\newfont{\subsecfnt}{ptmri8t at 11pt}
+\newfont{\subsecit}{ptmbi8t at 11pt}  % 
+\newfont{\ttlfnt}{phvb8t at 18pt}
+\newfont{\ttlit}{phvbo8t at 18pt}    % GM 2/4/2000
+\newfont{\subttlfnt}{phvr8t at 14pt}
+\newfont{\subttlit}{phvro8t at 14pt} % GM 2/4/2000
+\newfont{\subttlbf}{phvb8t at 14pt}  % 13 Jan 00 gkmt
+\newfont{\aufnt}{phvr8t at 12pt}
+\newfont{\auit}{phvro8t at 12pt}     % GM 2/4/2000
+\newfont{\affaddr}{phvr8t at 10pt}
+\newfont{\affaddrit}{phvro8t at 10pt} % GM 2/4/2000
+\newfont{\eaddfnt}{phvr8t at 12pt}
+\newfont{\ixpt}{ptmr8t at 9pt}
+\newfont{\confname}{ptmri8t at 8pt}
+\newfont{\crnotice}{ptmr8t at 8pt}
+\newfont{\ninept}{ptmr8t at 9pt}
+\fi
+\ifnum\ACM@basesize=10\relax
+\newfont{\secfnt}{ptmb8t at 13pt}
+\newfont{\secit}{ptmbi8t at 13pt}    %13 Jan 00 gkmt
+\newfont{\subsecfnt}{ptmri8t at 12pt}
+\newfont{\subsecit}{ptmbi8t at 12pt}  % 
+\newfont{\ttlfnt}{phvb8t at 20pt}
+\newfont{\ttlit}{phvbo8t at 20pt}    % GM 2/4/2000
+\newfont{\subttlfnt}{phvr8t at 15pt}
+\newfont{\subttlit}{phvro8t at 15pt} % GM 2/4/2000
+\newfont{\subttlbf}{phvb8t at 15pt}  % 13 Jan 00 gkmt
+\newfont{\aufnt}{phvr8t at 12pt}
+\newfont{\auit}{phvro8t at 12pt}     % GM 2/4/2000
+\newfont{\affaddr}{phvr8t at 11pt}
+\newfont{\affaddrit}{phvro8t at 11pt} % GM 2/4/2000
+\newfont{\eaddfnt}{phvr8t at 12pt}
+\newfont{\ixpt}{ptmr8t at 10pt}
+\newfont{\confname}{ptmri8t at 9pt}
+\newfont{\crnotice}{ptmr8t at 9pt}
+\newfont{\ninept}{ptmr8t at 10pt}
+\fi
+% +++++++++++++++++++++++++++++++++++++++++++++
+% -- End of block B --
+
+%\def\email#1{{{\eaddfnt{\vskip 4pt#1}}}}
+% If we have an email, inside a "shared affiliation" then we need the following instead
+\def\email#1{{{\eaddfnt{\par #1}}}}       % revised  - GM - 11/30/2006
+
+\def\addauthorsection{\ifnum\originalaucount>6  % was 3 - Gerry March 2007
+    \section{Additional Authors}\the\addauthors
+  \fi}
+
+\newcount\savesection
+\newcount\sectioncntr
+\global\sectioncntr=1
+
+\setcounter{secnumdepth}{3}
+
+\def\appendix{\par
+\section*{APPENDIX}
+\setcounter{section}{0}
+ \setcounter{subsection}{0}
+ \def\thesection{\Alph{section}} }
+
+\leftmargini 22.5pt
+\leftmarginii 19.8pt    % > \labelsep + width of '(m)'
+\leftmarginiii 16.8pt   % > \labelsep + width of 'vii.'
+\leftmarginiv 15.3pt    % > \labelsep + width of 'M.'
+\leftmarginv 9pt
+\leftmarginvi 9pt
+
+\leftmargin\leftmargini
+\labelsep 4.5pt
+\labelwidth\leftmargini\advance\labelwidth-\labelsep
+
+\def\@listI{\leftmargin\leftmargini \parsep 3.6pt plus 2pt minus 1pt%
+\topsep 7.2pt plus 2pt minus 4pt%
+\itemsep 3.6pt plus 2pt minus 1pt}
+
+\let\@listi\@listI
+\@listi
+
+\def\@listii{\leftmargin\leftmarginii
+   \labelwidth\leftmarginii\advance\labelwidth-\labelsep
+   \topsep 3.6pt plus 2pt minus 1pt
+   \parsep 1.8pt plus 0.9pt minus 0.9pt
+   \itemsep \parsep}
+
+\def\@listiii{\leftmargin\leftmarginiii
+    \labelwidth\leftmarginiii\advance\labelwidth-\labelsep
+    \topsep 1.8pt plus 0.9pt minus 0.9pt
+    \parsep \z@ \partopsep 1pt plus 0pt minus 1pt
+    \itemsep \topsep}
+
+\def\@listiv{\leftmargin\leftmarginiv
+     \labelwidth\leftmarginiv\advance\labelwidth-\labelsep}
+
+\def\@listv{\leftmargin\leftmarginv
+     \labelwidth\leftmarginv\advance\labelwidth-\labelsep}
+
+\def\@listvi{\leftmargin\leftmarginvi
+     \labelwidth\leftmarginvi\advance\labelwidth-\labelsep}
+
+\def\labelenumi{\theenumi.}
+\def\theenumi{\arabic{enumi}}
+
+\def\labelenumii{(\theenumii)}
+\def\theenumii{\alph{enumii}}
+\def\p@enumii{\theenumi}
+
+\def\labelenumiii{\theenumiii.}
+\def\theenumiii{\roman{enumiii}}
+\def\p@enumiii{\theenumi(\theenumii)}
+
+\def\labelenumiv{\theenumiv.}
+\def\theenumiv{\Alph{enumiv}}
+\def\p@enumiv{\p@enumiii\theenumiii}
+
+\def\labelitemi{$\bullet$}
+\def\labelitemii{\bf --}
+\def\labelitemiii{$\ast$}
+\def\labelitemiv{$\cdot$}
+
+\def\verse{\let\\=\@centercr
+  \list{}{\itemsep\z@ \itemindent -1.5em\listparindent \itemindent
+          \rightmargin\leftmargin\advance\leftmargin 1.5em}\item[]}
+\let\endverse\endlist
+
+\def\quotation{\list{}{\listparindent 1.5em
+    \itemindent\listparindent
+    \rightmargin\leftmargin \parsep 0pt plus 1pt}\item[]}
+\let\endquotation=\endlist
+
+\def\quote{\list{}{\rightmargin\leftmargin}\item[]}
+\let\endquote=\endlist
+
+\def\descriptionlabel#1{\hspace\labelsep \bf #1}
+\def\description{\list{}{\labelwidth\z@ \itemindent-\leftmargin
+       \let\makelabel\descriptionlabel}}
+
+\let\enddescription\endlist
+
+\def\theequation{\arabic{equation}}
 
 
-\setlength{\skip\footins}{8pt plus 3pt minus 1pt}
-\setlength{\footnotesep}{9pt}
+\ifnum\ACM@basesize=9\relax
+\arraycolsep 4.5pt   % Half the space between columns in an array environment.
+\tabcolsep 5.4pt    % Half the space between columns in a tabular environment.
+\arrayrulewidth .5pt % Width of rules in array and tabular environment. % (was .4) updated Gerry March 20 2007
+\doublerulesep 1.8pt % Space between adjacent rules in array or tabular env.
 
-\renewcommand{\footnoterule}{%
-  \hrule width .5\columnwidth height .33pt depth 0pt}
+\fi
 
-\renewcommand{\@makefntext}[1]{%
-  \noindent \@makefnmark \hspace{1pt}#1}
+\ifnum\ACM@basesize=10\relax
+\arraycolsep 5pt   % Half the space between columns in an array environment.
+\tabcolsep 6pt    % Half the space between columns in a tabular environment.
+\arrayrulewidth .5pt % Width of rules in array and tabular environment. % (was .4) updated Gerry March 20 2007
+\doublerulesep 1.8pt % Space between adjacent rules in array or tabular env.
 
-% Floats:
+\fi
 
-\setcounter{topnumber}{4}
+\tabbingsep \labelsep   % Space used by the \' command.  (See LaTeX manual.)
+
+\skip\@mpfootins =\skip\footins
+
+\fboxsep =2.7pt      % Space left between box and text by \fbox and \framebox.
+\fboxrule =.5pt      % Width of rules in box made by \fbox and \framebox. % (was .4) updated Gerry March 20 2007
+
+\def\thepart{\Roman{part}} % Roman numeral part numbers.
+\def\thesection       {\arabic{section}}
+\def\thesubsection    {\thesection.\arabic{subsection}}
+%\def\thesubsubsection {\thesubsection.\arabic{subsubsection}} % GM 7/30/2002
+%\def\theparagraph     {\thesubsubsection.\arabic{paragraph}}  % GM 7/30/2002
+\def\thesubparagraph  {\theparagraph.\arabic{subparagraph}}
+
+\def\@pnumwidth{1.55em}
+\def\@tocrmarg {2.55em}
+\def\@dotsep{4.5}
+\setcounter{tocdepth}{3}
+
+%\def\tableofcontents{\@latexerr{\tableofcontents: Tables of contents are not
+%  allowed in the `acmconf' document style.}\@eha}
+
+\def\tableofcontents{\ClassError{%
+    \string\tableofcontents\space is not allowed in the `acmconf' document	% January 2008
+    style}\@eha}
+
+\def\l@part#1#2{\addpenalty{\@secpenalty}
+   \addvspace{2.25em plus 1pt}  % space above part line
+   \begingroup
+   \@tempdima 3em       % width of box holding part number, used by
+     \parindent \z@ \rightskip \@pnumwidth      %% \numberline
+     \parfillskip -\@pnumwidth
+     {\large \bf        % set line in \large boldface
+     \leavevmode        % TeX command to enter horizontal mode.
+     #1\hfil \hbox to\@pnumwidth{\hss #2}}\par
+     \nobreak           % Never break after part entry
+   \endgroup}
+
+\def\l@section#1#2{\addpenalty{\@secpenalty} % good place for page break
+   \addvspace{1.0em plus 1pt}   % space above toc entry
+   \@tempdima 1.5em             % width of box holding section number
+   \begingroup
+    \parindent  \z@ \rightskip \@pnumwidth
+     \parfillskip -\@pnumwidth
+     \bf                        % Boldface.
+     \leavevmode                % TeX command to enter horizontal mode.
+      \advance\leftskip\@tempdima %% added 5 Feb 88 to conform to
+      \hskip -\leftskip           %% 25 Jan 88 change to \numberline
+     #1\nobreak\hfil \nobreak\hbox to\@pnumwidth{\hss #2}\par
+   \endgroup}
+
+
+\def\l@subsection{\@dottedtocline{2}{1.5em}{2.3em}}
+\def\l@subsubsection{\@dottedtocline{3}{3.8em}{3.2em}}
+\def\l@paragraph{\@dottedtocline{4}{7.0em}{4.1em}}
+\def\l@subparagraph{\@dottedtocline{5}{10em}{5em}}
+
+%\def\listoffigures{\@latexerr{\listoffigures: Lists of figures are not
+%  allowed in the `acmconf' document style.}\@eha}
+
+\def\listoffigures{\ClassError{%
+    \string\listoffigures\space is not allowed in the `acmconf' document	% January 2008
+    style}\@eha}
+
+\def\l@figure{\@dottedtocline{1}{1.5em}{2.3em}}
+
+%\def\listoftables{\@latexerr{\listoftables: Lists of tables are not
+%  allowed in the `acmconf' document style.}\@eha}
+%\let\l@table\l@figure
+
+\def\listoftables{\ClassError{%
+    \string\listoftables\space is not allowed in the `acmconf' document		% January 2008
+    style}\@eha}
+ \let\l@table\l@figure
+
+\def\footnoterule{\kern-3\p@
+  \hrule width .5\columnwidth   % (was .4) updated Gerry March 20 2007
+  \kern 2.6\p@}                 % The \hrule has default height of .4pt % (was .4) updated Gerry March 20 2007
+% ------
+\long\def\@makefntext#1{\noindent 
+%\hbox to .5em{\hss$^{\@thefnmark}$}#1}   % original
+\hbox to .5em{\hss\textsuperscript{\@thefnmark}}#1}  % C. Clifton / GM Oct. 2nd. 2002
+% -------
+
+\long\def\@maketntext#1{\noindent
+#1}
+
+\long\def\@maketitlenotetext#1#2{\noindent
+            \hbox to 1.8em{\hss$^{#1}$}#2}
+
+\setcounter{topnumber}{2}
+\def\topfraction{.7}
 \setcounter{bottomnumber}{1}
-\setcounter{totalnumber}{4}
+\def\bottomfraction{.3}
+\setcounter{totalnumber}{3}
+\def\textfraction{.2}
+\def\floatpagefraction{.5}
+\setcounter{dbltopnumber}{2}
+\def\dbltopfraction{.7}
+\def\dblfloatpagefraction{.5}
 
-\renewcommand{\fps@figure}{tp}
-\renewcommand{\fps@table}{tp}
-\renewcommand{\topfraction}{0.90}
-\renewcommand{\bottomfraction}{0.30}
-\renewcommand{\textfraction}{0.10}
-\renewcommand{\floatpagefraction}{0.75}
+%
+\long\def\@makecaption#1#2{
+   \vskip \baselineskip
+   \setbox\@tempboxa\hbox{\textbf{#1: #2}}
+   \ifdim \wd\@tempboxa >\hsize % IF longer than one line:
+       \textbf{#1: #2}\par               %   THEN set as ordinary paragraph.
+     \else                      %   ELSE  center.
+       \hbox to\hsize{\hfil\box\@tempboxa\hfil}\par
+   \fi}
 
-\setcounter{dbltopnumber}{4}
+%
 
-\renewcommand{\dbltopfraction}{\topfraction}
-\renewcommand{\dblfloatpagefraction}{\floatpagefraction}
+\long\def\@makecaption#1#2{
+   \vskip 10pt
+   \setbox\@tempboxa\hbox{\textbf{#1: #2}}
+   \ifdim \wd\@tempboxa >\hsize % IF longer than one line:
+       \textbf{#1: #2}\par                %   THEN set as ordinary paragraph.
+     \else                      %   ELSE  center.
+       \hbox to\hsize{\hfil\box\@tempboxa\hfil}
+   \fi}
 
-\setlength{\floatsep}{18pt plus 4pt minus 2pt}
-\setlength{\textfloatsep}{18pt plus 4pt minus 3pt}
-\setlength{\intextsep}{10pt plus 4pt minus 3pt}
+\@ifundefined{figure}{\newcounter {figure}} % this is for LaTeX2e
 
-\setlength{\dblfloatsep}{18pt plus 4pt minus 2pt}
-\setlength{\dbltextfloatsep}{20pt plus 4pt minus 3pt}
+\def\fps@figure{tbp}
+\def\ftype@figure{1}
+\def\ext@figure{lof}
+\def\fnum@figure{Figure \thefigure}
+\def\figure{\@float{figure}}
+%\let\endfigure\end@float
+\def\endfigure{\end@float} 		% Gerry January 2008
+\@namedef{figure*}{\@dblfloat{figure}}
+\@namedef{endfigure*}{\end@dblfloat}
 
-% Miscellaneous:
+\@ifundefined{table}{\newcounter {table}} % this is for LaTeX2e
 
-\errorcontextlines = 5
-
-%                       Fonts
-%                       -----
+\def\fps@table{tbp}
+\def\ftype@table{2}
+\def\ext@table{lot}
+\def\fnum@table{Table \thetable}
+\def\table{\@float{table}}
+%\let\endtable\end@float
+\def\endtable{\end@float}		% Gerry January 2008
+\@namedef{table*}{\@dblfloat{table}}
+\@namedef{endtable*}{\end@dblfloat}
 
+\newtoks\titleboxnotes
+\newcount\titleboxnoteflag
 
-\if \@times
-  \renewcommand{\rmdefault}{ptm}%
-  \if \@mathtime
-    \usepackage[mtbold,noTS1]{mathtime}%
-  \else
-%%%    \usepackage{mathptm}%
-  \fi
-\else
-  \relax
+\def\maketitle{\par
+ \begingroup
+   \def\thefootnote{\fnsymbol{footnote}}
+   \def\@makefnmark{\hbox
+       to 0pt{$^{\@thefnmark}$\hss}}
+     \twocolumn[\@maketitle]
+\@thanks
+ \endgroup
+ \setcounter{footnote}{0}
+ \let\maketitle\relax
+ \let\@maketitle\relax
+ \gdef\@thanks{}\gdef\@author{}\gdef\@title{}\gdef\@subtitle{}\let\thanks\relax
+ \@copyrightspace}
+
+%% CHANGES ON NEXT LINES
+\newif\if@ll % to record which version of LaTeX is in use
+
+\expandafter\ifx\csname LaTeXe\endcsname\relax % LaTeX2.09 is used
+\else% LaTeX2e is used, so set ll to true
+\global\@lltrue
 \fi
 
-\if \@ninepoint
-
-\renewcommand{\normalsize}{%
-  \@setfontsize{\normalsize}{9pt}{10pt}%
-  \setlength{\abovedisplayskip}{5pt plus 1pt minus .5pt}%
-  \setlength{\belowdisplayskip}{\abovedisplayskip}%
-  \setlength{\abovedisplayshortskip}{3pt plus 1pt minus 2pt}%
-  \setlength{\belowdisplayshortskip}{\abovedisplayshortskip}}
-
-\renewcommand{\tiny}{\@setfontsize{\tiny}{5pt}{6pt}}
-
-\renewcommand{\scriptsize}{\@setfontsize{\scriptsize}{7pt}{8pt}}
-
-\renewcommand{\small}{%
-  \@setfontsize{\small}{8pt}{9pt}%
-  \setlength{\abovedisplayskip}{4pt plus 1pt minus 1pt}%
-  \setlength{\belowdisplayskip}{\abovedisplayskip}%
-  \setlength{\abovedisplayshortskip}{2pt plus 1pt}%
-  \setlength{\belowdisplayshortskip}{\abovedisplayshortskip}}
-
-\renewcommand{\footnotesize}{%
-  \@setfontsize{\footnotesize}{8pt}{9pt}%
-  \setlength{\abovedisplayskip}{4pt plus 1pt minus .5pt}%
-  \setlength{\belowdisplayskip}{\abovedisplayskip}%
-  \setlength{\abovedisplayshortskip}{2pt plus 1pt}%
-  \setlength{\belowdisplayshortskip}{\abovedisplayshortskip}}
-
-\renewcommand{\large}{\@setfontsize{\large}{11pt}{13pt}}
-
-\renewcommand{\Large}{\@setfontsize{\Large}{14pt}{18pt}}
-
-\renewcommand{\LARGE}{\@setfontsize{\LARGE}{18pt}{20pt}}
-
-\renewcommand{\huge}{\@setfontsize{\huge}{20pt}{25pt}}
-
-\renewcommand{\Huge}{\@setfontsize{\Huge}{25pt}{30pt}}
-
-\else\if \@tenpoint
-
-\relax
-
+\if@ll
+  \NeedsTeXFormat{LaTeX2e}
+  \ProvidesClass{sig-alternate} [2013/05/12 v2.7 based on acmproc.cls V1.3 <Nov. 30 '99>]
+  \RequirePackage{latexsym}% QUERY: are these two really needed?
+  \let\dooptions\ProcessOptions
 \else
-
-\relax
-
-\fi\fi
-
-%                       Abstract
-%                       --------
-
-
-\renewenvironment{abstract}{%
-  \section*{Abstract}%
-  \normalsize}{%
-  }
-
-%                       Bibliography
-%                       ------------
-
-
-\renewenvironment{thebibliography}[1]
-     {\section*{\refname
-        \@mkboth{\MakeUppercase\refname}{\MakeUppercase\refname}}%
-      \list{\@biblabel{\@arabic\c@enumiv}}%
-           {\settowidth\labelwidth{\@biblabel{#1}}%
-            \leftmargin\labelwidth
-            \advance\leftmargin\labelsep
-            \@openbib@code
-            \usecounter{enumiv}%
-            \let\p@enumiv\@empty
-            \renewcommand\theenumiv{\@arabic\c@enumiv}}%
-      \bibfont
-      \clubpenalty4000
-      \@clubpenalty \clubpenalty
-      \widowpenalty4000%
-      \sfcode`\.\@m}
-     {\def\@noitemerr
-       {\@latex@warning{Empty `thebibliography' environment}}%
-      \endlist}
-
-\if \@natbib
-
-\if \@authoryear
-  \typeout{Using natbib package with 'authoryear' citation style.}
-  \usepackage[authoryear,sort,square]{natbib}
-  \bibpunct{[}{]}{;}{a}{}{,}    % Change citation separator to semicolon,
-                                % eliminate comma between author and year.
-  \let \cite = \citep
-\else
-  \typeout{Using natbib package with 'numbers' citation style.}
-  \usepackage[numbers,sort&compress,square]{natbib}
+  \let\dooptions\@options
 \fi
-\setlength{\bibsep}{3pt plus .5pt minus .25pt}
+%% END CHANGES
 
+\def\@height{height}
+\def\@width{width}
+\def\@minus{minus}
+\def\@plus{plus}
+\def\hb@xt@{\hbox to}
+\newif\if@faircopy
+\@faircopyfalse
+\def\ds@faircopy{\@faircopytrue}
+
+\def\ds@preprint{\@faircopyfalse}
+
+\@twosidetrue
+\@mparswitchtrue
+\def\ds@draft{\overfullrule 5\p@}
+%% CHANGE ON NEXT LINE
+\dooptions
+
+\lineskip \p@
+\normallineskip \p@
+\def\baselinestretch{1}
+\def\@ptsize{0} %needed for amssymbols.sty
+
+%% CHANGES ON NEXT LINES
+\if@ll% allow use of old-style font change commands in LaTeX2e
+\@maxdepth\maxdepth
+%
+\DeclareOldFontCommand{\rm}{\ninept\rmfamily}{\mathrm}
+\DeclareOldFontCommand{\sf}{\normalfont\sffamily}{\mathsf}
+\DeclareOldFontCommand{\tt}{\normalfont\ttfamily}{\mathtt}
+\DeclareOldFontCommand{\bf}{\normalfont\bfseries}{\mathbf}
+\DeclareOldFontCommand{\it}{\normalfont\itshape}{\mathit}
+\DeclareOldFontCommand{\sl}{\normalfont\slshape}{\@nomath\sl}
+\DeclareOldFontCommand{\sc}{\normalfont\scshape}{\@nomath\sc}
+\DeclareRobustCommand*{\cal}{\@fontswitch{\relax}{\mathcal}}
+\DeclareRobustCommand*{\mit}{\@fontswitch{\relax}{\mathnormal}}
 \fi
-
-\def \bibfont {\small}
-
-%                       Categories
-%                       ----------
-
-
-\@setflag \@firstcategory = \@true
-
-\newcommand{\category}[3]{%
-  \if \@firstcategory
-    \paragraph*{Categories and Subject Descriptors}%
-    \@setflag \@firstcategory = \@false
-  \else
-    \unskip ;\hspace{.75em}%
-  \fi
-  \@ifnextchar [{\@category{#1}{#2}{#3}}{\@category{#1}{#2}{#3}[]}}
-
-\def \@category #1#2#3[#4]{%
-  {\let \and = \relax
-   #1 [\textit{#2}]%
-   \if \@emptyargp{#4}%
-     \if \@notp{\@emptyargp{#3}}: #3\fi
-   \else
-     :\space
-     \if \@notp{\@emptyargp{#3}}#3---\fi
-     \textrm{#4}%
-   \fi}}
-
-%                       Copyright Notice
-%                       --------- ------
-
-
-\def \ftype@copyrightbox {8}
-\def \@toappear {}
-\def \@permission {}
-\def \@reprintprice {}
-
-\def \@copyrightspace {%
-  \@float{copyrightbox}[b]%
-  \vbox to 1in{%
-    \vfill
-    \parbox[b]{20pc}{%
-      \scriptsize
-      \if \@preprint
-        [Copyright notice will appear here
-         once 'preprint' option is removed.]\par
-      \else
-        \@toappear
-      \fi
-      \if \@reprint
-        \noindent Reprinted from \@conferencename,
-        \@proceedings,
-        \@conferenceinfo,
-        pp.~\number\thepage--\pageref{sigplanconf@finalpage}.\par
-      \fi}}%
-  \end@float}
-
-\long\def \toappear #1{%
-  \def \@toappear {#1}}
-
-\toappear{%
-  \noindent \@permission \par
-  \vspace{2pt}
-  \noindent \textsl{\@conferencename}\quad \@conferenceinfo \par
-  \noindent Copyright \copyright\ \@copyrightyear\ ACM \@copyrightdata
-    \dots \@reprintprice\par}
-
-\newcommand{\permission}[1]{%
-  \gdef \@permission {#1}}
-
-\permission{%
-  Permission to make digital or hard copies of all or
-  part of this work for personal or classroom use is granted without
-  fee provided that copies are not made or distributed for profit or
-  commercial advantage and that copies bear this notice and the full
-  citation on the first page.  To copy otherwise, to republish, to
-  post on servers or to redistribute to lists, requires prior specific
-  permission and/or a fee.}
-
-% Here we have some alternate permission statements and copyright lines:
-
-\newcommand{\ACMCanadapermission}{%
-  \permission{%
-    Copyright \@copyrightyear\ Association for Computing Machinery.
-    ACM acknowledges that
-    this contribution was authored or co-authored by an affiliate of the
-    National Research Council of Canada (NRC).
-    As such, the Crown in Right of
-    Canada retains an equal interest in the copyright, however granting
-    nonexclusive, royalty-free right to publish or reproduce this article,
-    or to allow others to do so, provided that clear attribution
-    is also given to the authors and the NRC.}}
-
-\newcommand{\ACMUSpermission}{%
-  \permission{%
-    Copyright \@copyrightyear\ Association for
-    Computing Machinery. ACM acknowledges that
-    this contribution was authored or co-authored
-    by a contractor or affiliate
-    of the U.S. Government. As such, the Government retains a nonexclusive,
-    royalty-free right to publish or reproduce this article,
-    or to allow others to do so, for Government purposes only.}}
-
-\newcommand{\authorpermission}{%
-  \permission{%
-    Copyright is held by the author/owner(s).}
-  \toappear{%
-    \noindent \@permission \par
-    \vspace{2pt}
-    \noindent \textsl{\@conferencename}\quad \@conferenceinfo \par
-    ACM \@copyrightdata.}}
-
-\newcommand{\Sunpermission}{%
-  \permission{%
-    Copyright is held by Sun Microsystems, Inc.}%
-  \toappear{%
-    \noindent \@permission \par
-    \vspace{2pt}
-    \noindent \textsl{\@conferencename}\quad \@conferenceinfo \par
-    ACM \@copyrightdata.}}
-
-\newcommand{\USpublicpermission}{%
-  \permission{%
-    This paper is authored by an employee(s) of the United States
-    Government and is in the public domain.}%
-  \toappear{%
-    \noindent \@permission \par
-    \vspace{2pt}
-    \noindent \textsl{\@conferencename}\quad \@conferenceinfo \par
-    ACM \@copyrightdata.}}
-
-\newcommand{\reprintprice}[1]{%
-  \gdef \@reprintprice {#1}}
-
-\reprintprice{\$10.00}
-
-%                       Enunciations
-%                       ------------
-
-
-\def \@begintheorem #1#2{%                      {name}{number}
-  \trivlist
-  \item[\hskip \labelsep \textsc{#1 #2.}]%
-  \itshape\selectfont
-  \ignorespaces}
-
-\def \@opargbegintheorem #1#2#3{%               {name}{number}{title}
-  \trivlist
-  \item[%
-    \hskip\labelsep \textsc{#1\ #2}%
-    \if \@notp{\@emptyargp{#3}}\nut (#3).\fi]%
-  \itshape\selectfont
-  \ignorespaces}
-
-%                       Figures
-%                       -------
-
-
-\@setflag \@caprule = \@true
-
-\long\def \@makecaption #1#2{%
-  \addvspace{4pt}
-  \if \@caprule
-    \hrule width \hsize height .33pt
-    \vspace{4pt}
-  \fi
-  \setbox \@tempboxa = \hbox{\@setfigurenumber{#1.}\nut #2}%
-  \if \@dimgtrp{\wd\@tempboxa}{\hsize}%
-    \noindent \@setfigurenumber{#1.}\nut #2\par
-  \else
-    \centerline{\box\@tempboxa}%
-  \fi}
-
-\newcommand{\nocaptionrule}{%
-  \@setflag \@caprule = \@false}
-
-\def \@setfigurenumber #1{%
-  {\rmfamily \bfseries \selectfont #1}}
-
-%                       Hierarchy
-%                       ---------
-
-
-\setcounter{secnumdepth}{\@numheaddepth}
-
-\newskip{\@sectionaboveskip}
-\setvspace{\@sectionaboveskip}{10pt plus 3pt minus 2pt}
-
-\newskip{\@sectionbelowskip}
-\if \@blockstyle
-  \setlength{\@sectionbelowskip}{0.1pt}%
+%
+\if@ll
+ \renewcommand{\rmdefault}{cmr}  % was 'ttm'
+% Note! I have also found 'mvr' to work ESPECIALLY well.
+% Gerry - October 1999
+% You may need to change your LV1times.fd file so that sc is
+% mapped to cmcsc - -for smallcaps -- that is if you decide
+% to change {cmr} to {times} above. (Not recommended)
+\ifnum\ACM@basesize=9\relax
+  \renewcommand{\@ptsize}{}
+  \renewcommand{\normalsize}{%
+    \@setfontsize\normalsize\@ixpt{10.5\p@}%\ninept%
+    \abovedisplayskip 6\p@ \@plus2\p@ \@minus\p@
+    \belowdisplayskip \abovedisplayskip
+    \abovedisplayshortskip 6\p@ \@minus 3\p@
+    \belowdisplayshortskip 6\p@ \@minus 3\p@
+    \let\@listi\@listI}
+\fi
+\ifnum\ACM@basesize=10\relax
+  \renewcommand{\@ptsize}{}
+  \renewcommand{\normalsize}{%
+    \@setfontsize\normalsize\@xpt{11.5\p@}%\ninept%
+    \abovedisplayskip 6.5\p@ \@plus2\p@ \@minus\p@
+    \belowdisplayskip \abovedisplayskip
+    \abovedisplayshortskip 6.5\p@ \@minus 3\p@
+    \belowdisplayshortskip 6.5\p@ \@minus 3\p@
+    \let\@listi\@listI}
+\fi
 \else
-  \setlength{\@sectionbelowskip}{4pt}%
+  \def\@normalsize{%changed next to 9 from 10
+    \@setsize\normalsize{9\p@}\ixpt\@ixpt
+   \abovedisplayskip 6\p@ \@plus2\p@ \@minus\p@
+    \belowdisplayskip \abovedisplayskip
+    \abovedisplayshortskip 6\p@ \@minus 3\p@
+    \belowdisplayshortskip 6\p@ \@minus 3\p@
+    \let\@listi\@listI
+  }%
+\fi
+\if@ll
+\ifnum\ACM@basesize=9\relax
+  \newcommand\scriptsize{\@setfontsize\scriptsize\@viipt{8\p@}}
+  \newcommand\tiny{\@setfontsize\tiny\@vpt{6\p@}}
+  \newcommand\large{\@setfontsize\large\@xiipt{14\p@}}
+  \newcommand\Large{\@setfontsize\Large\@xivpt{18\p@}}
+  \newcommand\LARGE{\@setfontsize\LARGE\@xviipt{20\p@}}
+  \newcommand\huge{\@setfontsize\huge\@xxpt{25\p@}}
+  \newcommand\Huge{\@setfontsize\Huge\@xxvpt{30\p@}}
+\fi
+\ifnum\ACM@basesize=10\relax
+  \newcommand\scriptsize{\@setfontsize\scriptsize\@viiipt{9\p@}}
+  \newcommand\tiny{\@setfontsize\tiny\@vipt{7\p@}}
+  \newcommand\large{\@setfontsize\large\@xiiipt{15\p@}}
+  \newcommand\Large{\@setfontsize\Large\@xvpt{20\p@}}
+  \newcommand\LARGE{\@setfontsize\LARGE\@xixpt{22\p@}}
+  \newcommand\huge{\@setfontsize\huge\@xixpt{30\p@}}
+  \newcommand\Huge{\@setfontsize\Huge30pt{36\p@}}
+\fi
+\else
+  \def\scriptsize{\@setsize\scriptsize{8\p@}\viipt\@viipt}
+  \def\tiny{\@setsize\tiny{6\p@}\vpt\@vpt}
+  \def\large{\@setsize\large{14\p@}\xiipt\@xiipt}
+  \def\Large{\@setsize\Large{18\p@}\xivpt\@xivpt}
+  \def\LARGE{\@setsize\LARGE{20\p@}\xviipt\@xviipt}
+  \def\huge{\@setsize\huge{25\p@}\xxpt\@xxpt}
+  \def\Huge{\@setsize\Huge{30\p@}\xxvpt\@xxvpt}
+\fi
+\normalsize
+
+% make aubox hsize/number of authors up to 3, less gutter
+% then showbox gutter showbox gutter showbox -- GKMT Aug 99
+\newbox\@acmtitlebox
+\ifnum\ACM@basesize=9\relax
+\def\@maketitle{\newpage
+ \null
+ \setbox\@acmtitlebox\vbox{%
+\baselineskip 20pt
+\vskip 2em                   % Vertical space above title.
+   \begin{center}
+    {\ttlfnt \@title\par}       % Title set in 18pt Helvetica (Arial) bold size.
+    \vskip 1.5em                % Vertical space after title.
+%This should be the subtitle.
+{\subttlfnt \the\subtitletext\par}\vskip 1.25em%\fi
+    {\baselineskip 16pt\aufnt   % each author set in \12 pt Arial, in a
+     \lineskip .5em             % tabular environment
+     \begin{tabular}[t]{c}\@author
+     \end{tabular}\par}
+    \vskip 1.5em               % Vertical space after author.
+   \end{center}}
+ \dimen0=\ht\@acmtitlebox
+ \advance\dimen0 by -12.75pc\relax % Increased space for title box -- KBT
+ \unvbox\@acmtitlebox
+ \ifdim\dimen0<0.0pt\relax\vskip-\dimen0\fi}
+\fi
+\ifnum\ACM@basesize=10\relax
+\def\@maketitle{\newpage
+ \null
+ \setbox\@acmtitlebox\vbox{%
+\baselineskip 22pt
+\vskip 2.2em                   % Vertical space above title.
+   \begin{center}
+    {\ttlfnt \@title\par}       % Title set in 18pt Helvetica (Arial) bold size.
+    \vskip 2em                % Vertical space after title.
+%This should be the subtitle.
+{\subttlfnt \the\subtitletext\par}\vskip 1.25em%\fi
+    {\baselineskip 18pt\aufnt   % each author set in \12 pt Arial, in a
+     \lineskip .5em             % tabular environment
+     \begin{tabular}[t]{c}\@author
+     \end{tabular}\par}
+    \vskip 2em               % Vertical space after author.
+   \end{center}}
+ \dimen0=\ht\@acmtitlebox
+ \advance\dimen0 by -12.75pc\relax % Increased space for title box -- KBT
+ \unvbox\@acmtitlebox
+ \ifdim\dimen0<0.0pt\relax\vskip-\dimen0\fi}
 \fi
 
-\renewcommand{\section}{%
-  \@startsection
-    {section}%
-    {1}%
-    {0pt}%
-    {-\@sectionaboveskip}%
-    {\@sectionbelowskip}%
-    {\large \bfseries \raggedright}}
+\newcount\titlenotecount
+\global\titlenotecount=0
+\newtoks\tntoks
+\newtoks\tntokstwo
+\newtoks\tntoksthree
+\newtoks\tntoksfour
+\newtoks\tntoksfive
 
-\newskip{\@subsectionaboveskip}
-\setvspace{\@subsectionaboveskip}{8pt plus 2pt minus 2pt}
-
-\newskip{\@subsectionbelowskip}
-\if \@blockstyle
-  \setlength{\@subsectionbelowskip}{0.1pt}%
-\else
-  \setlength{\@subsectionbelowskip}{4pt}%
+\def\abstract{
+\ifnum\titlenotecount>0 % was =1
+    \insert\footins{%
+    \reset@font\footnotesize
+        \interlinepenalty\interfootnotelinepenalty
+        \splittopskip\footnotesep
+        \splitmaxdepth \dp\strutbox \floatingpenalty \@MM
+        \hsize\columnwidth \@parboxrestore
+        \protected@edef\@currentlabel{%
+        }%
+        \color@begingroup
+\ifnum\titlenotecount=1
+      \@maketntext{%
+         \raisebox{4pt}{$\ast$}\rule\z@\footnotesep\ignorespaces\the\tntoks\@finalstrut\strutbox}%
 \fi
-
-\renewcommand{\subsection}{%
-  \@startsection%
-    {subsection}%
-    {2}%
-    {0pt}%
-    {-\@subsectionaboveskip}%
-    {\@subsectionbelowskip}%
-    {\normalsize \bfseries \raggedright}}
-
-\renewcommand{\subsubsection}{%
-  \@startsection%
-    {subsubsection}%
-    {3}%
-    {0pt}%
-    {-\@subsectionaboveskip}
-    {\@subsectionbelowskip}%
-    {\normalsize \bfseries \raggedright}}
-
-\newskip{\@paragraphaboveskip}
-\setvspace{\@paragraphaboveskip}{6pt plus 2pt minus 2pt}
-
-\renewcommand{\paragraph}{%
-  \@startsection%
-    {paragraph}%
-    {4}%
-    {0pt}%
-    {\@paragraphaboveskip}
-    {-1em}%
-    {\normalsize \bfseries \if \@times \itshape \fi}}
-
-\renewcommand{\subparagraph}{%
-  \@startsection%
-    {subparagraph}%
-    {4}%
-    {0pt}%
-    {\@paragraphaboveskip}
-    {-1em}%
-    {\normalsize \itshape}}
-
-% Standard headings:
-
-\newcommand{\acks}{\section*{Acknowledgments}}
-
-\newcommand{\keywords}{\paragraph*{Keywords}}
-
-\newcommand{\terms}{\paragraph*{General Terms}}
-
-%                       Identification
-%                       --------------
-
-
-\def \@conferencename {}
-\def \@conferenceinfo {}
-\def \@copyrightyear {}
-\def \@copyrightdata {[to be supplied]}
-\def \@proceedings {[Unknown Proceedings]}
-
-
-\newcommand{\conferenceinfo}[2]{%
-  \gdef \@conferencename {#1}%
-  \gdef \@conferenceinfo {#2}}
-
-\newcommand{\copyrightyear}[1]{%
-  \gdef \@copyrightyear {#1}}
-
-\let \CopyrightYear = \copyrightyear
-
-\newcommand{\copyrightdata}[1]{%
-  \gdef \@copyrightdata {#1}}
-
-\let \crdata = \copyrightdata
-
-\newcommand{\proceedings}[1]{%
-  \gdef \@proceedings {#1}}
-
-%                       Lists
-%                       -----
-
-
-\setlength{\leftmargini}{13pt}
-\setlength\leftmarginii{13pt}
-\setlength\leftmarginiii{13pt}
-\setlength\leftmarginiv{13pt}
-\setlength{\labelsep}{3.5pt}
-
-\setlength{\topsep}{\standardvspace}
-\if \@blockstyle
-  \setlength{\itemsep}{1pt}
-  \setlength{\parsep}{3pt}
-\else
-  \setlength{\itemsep}{1pt}
-  \setlength{\parsep}{3pt}
+\ifnum\titlenotecount=2
+      \@maketntext{%
+      \raisebox{4pt}{$\ast$}\rule\z@\footnotesep\ignorespaces\the\tntoks\par\@finalstrut\strutbox}%
+\@maketntext{%
+         \raisebox{4pt}{$\dagger$}\rule\z@\footnotesep\ignorespaces\the\tntokstwo\@finalstrut\strutbox}%
 \fi
+\ifnum\titlenotecount=3
+      \@maketntext{%
+         \raisebox{4pt}{$\ast$}\rule\z@\footnotesep\ignorespaces\the\tntoks\par\@finalstrut\strutbox}%
+\@maketntext{%
+         \raisebox{4pt}{$\dagger$}\rule\z@\footnotesep\ignorespaces\the\tntokstwo\par\@finalstrut\strutbox}%
+\@maketntext{%
+         \raisebox{4pt}{$\ddagger$}\rule\z@\footnotesep\ignorespaces\the\tntoksthree\@finalstrut\strutbox}%
+\fi
+\ifnum\titlenotecount=4
+      \@maketntext{%
+         \raisebox{4pt}{$\ast$}\rule\z@\footnotesep\ignorespaces\the\tntoks\par\@finalstrut\strutbox}%
+\@maketntext{%
+         \raisebox{4pt}{$\dagger$}\rule\z@\footnotesep\ignorespaces\the\tntokstwo\par\@finalstrut\strutbox}%
+\@maketntext{%
+         \raisebox{4pt}{$\ddagger$}\rule\z@\footnotesep\ignorespaces\the\tntoksthree\par\@finalstrut\strutbox}%
+\@maketntext{%
+         \raisebox{4pt}{$\S$}\rule\z@\footnotesep\ignorespaces\the\tntoksfour\@finalstrut\strutbox}%
+\fi
+\ifnum\titlenotecount=5
+      \@maketntext{%
+         \raisebox{4pt}{$\ast$}\rule\z@\footnotesep\ignorespaces\the\tntoks\par\@finalstrut\strutbox}%
+\@maketntext{%
+         \raisebox{4pt}{$\dagger$}\rule\z@\footnotesep\ignorespaces\the\tntokstwo\par\@finalstrut\strutbox}%
+\@maketntext{%
+         \raisebox{4pt}{$\ddagger$}\rule\z@\footnotesep\ignorespaces\the\tntoksthree\par\@finalstrut\strutbox}%
+\@maketntext{%
+         \raisebox{4pt}{$\S$}\rule\z@\footnotesep\ignorespaces\the\tntoksfour\par\@finalstrut\strutbox}%
+\@maketntext{%
+         \raisebox{4pt}{$\P$}\rule\z@\footnotesep\ignorespaces\the\tntoksfive\@finalstrut\strutbox}%
+\fi
+   \color@endgroup} %g}
+\fi
+\setcounter{footnote}{0}
+\section*{ABSTRACT}\normalsize%\ninept
+}
 
-\renewcommand{\labelitemi}{{\small \centeroncapheight{\textbullet}}}
-\renewcommand{\labelitemii}{\centeroncapheight{\rule{2.5pt}{2.5pt}}}
-\renewcommand{\labelitemiii}{$-$}
-\renewcommand{\labelitemiv}{{\Large \textperiodcentered}}
+\def\endabstract{\if@twocolumn\else\endquotation\fi}
 
-\renewcommand{\@listi}{%
-  \leftmargin = \leftmargini
-  \listparindent = 0pt}
-%%%  \itemsep = 1pt
-%%%  \parsep = 3pt}
-%%%  \listparindent = \parindent}
+\def\keywords{\if@twocolumn
+\section*{Keywords}
+\else \small
+\quotation
+\fi}
 
-\let \@listI = \@listi
+\def\terms#1{%
+%\if@twocolumn
+%\section*{General Terms}
+%\else \small
+%\quotation
+%\fi
+}
 
-\renewcommand{\@listii}{%
-  \leftmargin = \leftmarginii
-  \topsep = 1pt
-  \labelwidth = \leftmarginii
-  \advance \labelwidth by -\labelsep
-  \listparindent = \parindent}
+% -- Classification needs to be a bit smart due to optionals - Gerry/Georgia November 2nd. 1999
+\newcount\catcount
+\global\catcount=1
 
-\renewcommand{\@listiii}{%
-  \leftmargin = \leftmarginiii
-  \labelwidth = \leftmarginiii
-  \advance \labelwidth by -\labelsep
-  \listparindent = \parindent}
-
-\renewcommand{\@listiv}{%
-  \leftmargin = \leftmarginiv
-  \labelwidth = \leftmarginiv
-  \advance \labelwidth by -\labelsep
-  \listparindent = \parindent}
-
-%                       Mathematics
-%                       -----------
-
-
-\def \theequation {\arabic{equation}}
-
-%                       Miscellaneous
-%                       -------------
-
-
-\newcommand{\balancecolumns}{%
-  \vfill\eject
-  \global\@colht = \textheight
-  \global\ht\@cclv = \textheight}
-
-\newcommand{\nut}{\hspace{.5em}}
-
-\newcommand{\softraggedright}{%
-  \let \\ = \@centercr
-  \leftskip = 0pt
-  \rightskip = 0pt plus 10pt}
-
-%                       Program Code
-%                       ------- ----
-
-
-\newcommand{\mono}[1]{%
-  {\@tempdima = \fontdimen2\font
-   \texttt{\spaceskip = 1.1\@tempdima #1}}}
-
-%                       Running Heads and Feet
-%                       ------- ----- --- ----
+\def\category#1#2#3{%
+\ifnum\catcount=1
+\section*{Categories and Subject Descriptors}
+\advance\catcount by 1\else{\unskip; }\fi
+    \@ifnextchar [{\@category{#1}{#2}{#3}}{\@category{#1}{#2}{#3}[]}%
+}
 
 
-\def \@preprintfooter {}
-
-\newcommand{\preprintfooter}[1]{%
-  \gdef \@preprintfooter {#1}}
-
-\if \@preprint
-
-\def \ps@plain {%
-  \let \@mkboth = \@gobbletwo
-  \let \@evenhead = \@empty
-  \def \@evenfoot {\scriptsize \textit{\@preprintfooter}\hfil \thepage \hfil
-                   \textit{\@formatyear}}%
-  \let \@oddhead = \@empty
-  \let \@oddfoot = \@evenfoot}
-
-\else\if \@reprint
-
-\def \ps@plain {%
-  \let \@mkboth = \@gobbletwo
-  \let \@evenhead = \@empty
-  \def \@evenfoot {\scriptsize \hfil \thepage \hfil}%
-  \let \@oddhead = \@empty
-  \let \@oddfoot = \@evenfoot}
-
-\else
-
-\let \ps@plain = \ps@empty
-\let \ps@headings = \ps@empty
-\let \ps@myheadings = \ps@empty
-
-\fi\fi
-
-\def \@formatyear {%
-  \number\year/\number\month/\number\day}
-
-%                       Special Characters
-%                       ------- ----------
+\def\@category#1#2#3[#4]{%
+    \begingroup
+        \let\and\relax
+            #1 [\textbf{#2}]%
+            \if!#4!%
+                \if!#3!\else : #3\fi
+            \else
+                :\space
+                \if!#3!\else #3\kern\z@---\hskip\z@\fi
+                \textit{#4}%
+            \fi
+    \endgroup
+}
+%
 
 
-\DeclareRobustCommand{\euro}{%
-  \protect{\rlap{=}}{\sf \kern .1em C}}
-
-%                       Title Page
-%                       ----- ----
 
 
-\@setflag \@addauthorsdone = \@false
 
-\def \@titletext {\@latex@error{No title was provided}{}}
-\def \@subtitletext {}
 
-\newcount{\@authorcount}
+%%% This section (written by KBT) handles the 1" box in the lower left
+%%% corner of the left column of the first page by creating a picture,
+%%% and inserting the predefined string at the bottom (with a negative
+%%% displacement to offset the space allocated for a non-existent
+%%% caption).
+%%%
+\newtoks\copyrightnotice
+\def\ftype@copyrightbox{8}
+\def\@copyrightspace{
+\@float{copyrightbox}[b]
+\begin{center}
+\setlength{\unitlength}{1pc}
+\ifnum\ACM@basesize=9
+\begin{picture}(20,6) %Space for copyright notice
+\put(0,-0.95){\crnotice{\@toappear}}
+\end{picture}
+\fi
+\ifnum\ACM@basesize=10
+\begin{picture}(20,7) %Space for copyright notice
+\put(0,-0.95){\crnotice{\@toappear}}
+\end{picture}
+\fi
+\end{center}
+\end@float}
 
-\newcount{\@titlenotecount}
-\newtoks{\@titlenotetext}
+\def\@toappear{} % Default setting blank - commands below change this.
+\long\def\toappear#1{\def\@toappear{\parbox[b]{20pc}{\baselineskip 9pt#1}}}
+\def\toappearbox#1{\def\@toappear{\raisebox{5pt}{\framebox[20pc]{\parbox[b]{19pc}{#1}}}}}
 
-\def \@titlebanner {}
+\newtoks\conf
+\newtoks\confinfo
+\def\conferenceinfo#1#2{\global\conf={#1}\global\confinfo{#2}}
 
-\renewcommand{\title}[1]{%
-  \gdef \@titletext {#1}}
 
-\newcommand{\subtitle}[1]{%
-  \gdef \@subtitletext {#1}}
+%\def\marginpar{\@latexerr{The \marginpar command is not allowed in the
+%  `acmconf' document style.}\@eha}
 
-\newcommand{\authorinfo}[3]{%           {names}{affiliation}{email/URL}
-  \global\@increment \@authorcount
-  \@withname\gdef {\@authorname\romannumeral\@authorcount}{#1}%
-  \@withname\gdef {\@authoraffil\romannumeral\@authorcount}{#2}%
-  \@withname\gdef {\@authoremail\romannumeral\@authorcount}{#3}}
+\def\marginpar{\ClassError{%
+    \string\marginpar\space is not allowed in the `acmconf' document		% January 2008
+    style}\@eha}
 
-\renewcommand{\author}[1]{%
-  \@latex@error{The \string\author\space command is obsolete;
-                use \string\authorinfo}{}}
+\mark{{}{}}     % Initializes TeX's marks
 
-\newcommand{\titlebanner}[1]{%
-  \gdef \@titlebanner {#1}}
+\def\today{\ifcase\month\or
+  January\or February\or March\or April\or May\or June\or
+  July\or August\or September\or October\or November\or December\fi
+  \space\number\day, \number\year}
 
-\renewcommand{\maketitle}{%
-  \pagestyle{plain}%
-  \if \@onecolumn
-    {\hsize = \standardtextwidth
-     \@maketitle}%
-  \else
-    \twocolumn[\@maketitle]%
-  \fi
-  \@placetitlenotes
-  \if \@copyrightwanted \@copyrightspace \fi}
+\def\@begintheorem#1#2{%
+    \parskip 0pt % GM July 2000 (for tighter spacing)
+    \trivlist
+    \item[%
+        \hskip 10\p@
+        \hskip \labelsep
+        {{\sc #1}\hskip 5\p@\relax#2.}%
+    ]
+    \it
+}
+\def\@opargbegintheorem#1#2#3{%
+    \parskip 0pt % GM July 2000 (for tighter spacing)
+    \trivlist
+    \item[%
+        \hskip 10\p@
+        \hskip \labelsep
+        {\sc #1\ #2\             % This mod by Gerry to enumerate corollaries
+   \setbox\@tempboxa\hbox{(#3)}  % and bracket the 'corollary title'
+        \ifdim \wd\@tempboxa>\z@ % and retain the correct numbering of e.g. theorems
+            \hskip 5\p@\relax    % if they occur 'around' said corollaries.
+            \box\@tempboxa       % Gerry - Nov. 1999.
+        \fi.}%
+    ]
+    \it
+}
+\newif\if@qeded
+\global\@qededfalse
 
-\def \@maketitle {%
-  \begin{center}
-  \@settitlebanner
-  \let \thanks = \titlenote
-  {\leftskip = 0pt plus 0.25\linewidth
-   \rightskip = 0pt plus 0.25 \linewidth
-   \parfillskip = 0pt
-   \spaceskip = .7em
-   \noindent \LARGE \bfseries \@titletext \par}
-  \vskip 6pt
-  \noindent \Large \@subtitletext \par
-  \vskip 12pt
-  \ifcase \@authorcount
-    \@latex@error{No authors were specified for this paper}{}\or
-    \@titleauthors{i}{}{}\or
-    \@titleauthors{i}{ii}{}\or
-    \@titleauthors{i}{ii}{iii}\or
-    \@titleauthors{i}{ii}{iii}\@titleauthors{iv}{}{}\or
-    \@titleauthors{i}{ii}{iii}\@titleauthors{iv}{v}{}\or
-    \@titleauthors{i}{ii}{iii}\@titleauthors{iv}{v}{vi}\or
-    \@titleauthors{i}{ii}{iii}\@titleauthors{iv}{v}{vi}%
-                  \@titleauthors{vii}{}{}\or
-    \@titleauthors{i}{ii}{iii}\@titleauthors{iv}{v}{vi}%
-                  \@titleauthors{vii}{viii}{}\or
-    \@titleauthors{i}{ii}{iii}\@titleauthors{iv}{v}{vi}%
-                  \@titleauthors{vii}{viii}{ix}\or
-    \@titleauthors{i}{ii}{iii}\@titleauthors{iv}{v}{vi}%
-                  \@titleauthors{vii}{viii}{ix}\@titleauthors{x}{}{}\or
-    \@titleauthors{i}{ii}{iii}\@titleauthors{iv}{v}{vi}%
-                  \@titleauthors{vii}{viii}{ix}\@titleauthors{x}{xi}{}\or
-    \@titleauthors{i}{ii}{iii}\@titleauthors{iv}{v}{vi}%
-                  \@titleauthors{vii}{viii}{ix}\@titleauthors{x}{xi}{xii}%
-  \else
-    \@latex@error{Cannot handle more than 12 authors}{}%
-  \fi
-  \vspace{1.75pc}
-  \end{center}}
+% -- original
+%\def\proof{%
+%  \vspace{-\parskip} % GM July 2000 (for tighter spacing)
+%    \global\@qededfalse
+%    \@ifnextchar[{\@xproof}{\@proof}%
+%}
+% -- end of original
 
-\def \@settitlebanner {%
-  \if \@andp{\@preprint}{\@notp{\@emptydefp{\@titlebanner}}}%
-    \vbox to 0pt{%
-      \vskip -32pt
-      \noindent \textbf{\@titlebanner}\par
-      \vss}%
-    \nointerlineskip
-  \fi}
+% (JSS) Fix for vertical spacing bug - Gerry Murray July 30th. 2002
+\def\proof{%
+\vspace{-\lastskip}\vspace{-\parsep}\penalty-51%
+\global\@qededfalse
+\@ifnextchar[{\@xproof}{\@proof}%
+}
 
-\def \@titleauthors #1#2#3{%
-  \if \@andp{\@emptyargp{#2}}{\@emptyargp{#3}}%
-    \noindent \@setauthor{40pc}{#1}{\@false}\par
-  \else\if \@emptyargp{#3}%
-    \noindent \@setauthor{17pc}{#1}{\@false}\hspace{3pc}%
-              \@setauthor{17pc}{#2}{\@false}\par
-  \else
-    \noindent \@setauthor{12.5pc}{#1}{\@false}\hspace{2pc}%
-              \@setauthor{12.5pc}{#2}{\@false}\hspace{2pc}%
-              \@setauthor{12.5pc}{#3}{\@true}\par
-    \relax
-  \fi\fi
-  \vspace{20pt}}
+\def\endproof{%
+    \if@qeded\else\qed\fi
+    \endtrivlist
+}
+\def\@proof{%
+    \trivlist
+    \item[%
+        \hskip 10\p@
+        \hskip \labelsep
+        {\sc Proof.}%
+    ]
+    \ignorespaces
+}
+\def\@xproof[#1]{%
+    \trivlist
+    \item[\hskip 10\p@\hskip \labelsep{\sc Proof #1.}]%
+    \ignorespaces
+}
+\def\qed{%
+    \unskip
+    \kern 10\p@
+    \begingroup
+        \unitlength\p@
+        \linethickness{.4\p@}%
+        \framebox(6,6){}%
+    \endgroup
+    \global\@qededtrue
+}
 
-\def \@setauthor #1#2#3{%                       {width}{text}{unused}
-  \vtop{%
-    \def \and {%
-      \hspace{16pt}}
-    \hsize = #1
-    \normalfont
-    \centering
-    \large \@name{\@authorname#2}\par
-    \vspace{5pt}
-    \normalsize \@name{\@authoraffil#2}\par
-    \vspace{2pt}
-    \textsf{\@name{\@authoremail#2}}\par}}
+\def\newdef#1#2{%
+    \expandafter\@ifdefinable\csname #1\endcsname
+        {\@definecounter{#1}%
+         \expandafter\xdef\csname the#1\endcsname{\@thmcounter{#1}}%
+         \global\@namedef{#1}{\@defthm{#1}{#2}}%
+         \global\@namedef{end#1}{\@endtheorem}%
+    }%
+}
+\def\@defthm#1#2{%
+    \refstepcounter{#1}%
+    \@ifnextchar[{\@ydefthm{#1}{#2}}{\@xdefthm{#1}{#2}}%
+}
+\def\@xdefthm#1#2{%
+    \@begindef{#2}{\csname the#1\endcsname}%
+    \ignorespaces
+}
+\def\@ydefthm#1#2[#3]{%
+    \trivlist
+    \item[%
+        \hskip 10\p@
+        \hskip \labelsep
+        {\it #2%
+%         \savebox\@tempboxa{#3}%
+         \saveb@x\@tempboxa{#3}%		% January 2008
+         \ifdim \wd\@tempboxa>\z@
+            \ \box\@tempboxa
+         \fi.%
+        }]%
+    \ignorespaces
+}
+\def\@begindef#1#2{%
+    \trivlist
+    \item[%
+        \hskip 10\p@
+        \hskip \labelsep
+        {\it #1\ \rm #2.}%
+    ]%
+}
+\def\theequation{\arabic{equation}}
 
-\def \@maybetitlenote #1{%
-  \if \@andp{#1}{\@gtrp{\@authorcount}{3}}%
-    \titlenote{See page~\pageref{@addauthors} for additional authors.}%
-  \fi}
+\newcounter{part}
+\newcounter{section}
+\newcounter{subsection}[section]
+\newcounter{subsubsection}[subsection]
+\newcounter{paragraph}[subsubsection]
+\def\thepart{\Roman{part}}
+\def\thesection{\arabic{section}}
+\def\thesubsection{\thesection.\arabic{subsection}}
+\def\thesubsubsection{\thesubsection.\arabic{subsubsection}} %removed \subsecfnt 29 July 2002 gkmt
+\def\theparagraph{\thesubsubsection.\arabic{paragraph}} %removed \subsecfnt 29 July 2002 gkmt
+\newif\if@uchead
+\@ucheadfalse
 
-\newtoks{\@fnmark}
+%% CHANGES: NEW NOTE
+%% NOTE: OK to use old-style font commands below, since they were
+%% suitably redefined for LaTeX2e
+%% END CHANGES
+\setcounter{secnumdepth}{3}
+\def\part{%
+    \@startsection{part}{9}{\z@}{-10\p@ \@plus -4\p@ \@minus -2\p@}
+        {4\p@}{\normalsize\@ucheadtrue}%
+}
+\def\section{%
+    \@startsection{section}{1}{\z@}{-10\p@ \@plus -4\p@ \@minus -2\p@}% GM
+    {4\p@}{\baselineskip 14pt\secfnt\@ucheadtrue}%
+}
 
-\newcommand{\titlenote}[1]{%
-  \global\@increment \@titlenotecount
-  \ifcase \@titlenotecount \relax \or
-    \@fnmark = {\ast}\or
-    \@fnmark = {\dagger}\or
-    \@fnmark = {\ddagger}\or
-    \@fnmark = {\S}\or
-    \@fnmark = {\P}\or
-    \@fnmark = {\ast\ast}%
-  \fi
-  \,$^{\the\@fnmark}$%
-  \edef \reserved@a {\noexpand\@appendtotext{%
-                       \noexpand\@titlefootnote{\the\@fnmark}}}%
-  \reserved@a{#1}}
-
-\def \@appendtotext #1#2{%
-  \global\@titlenotetext = \expandafter{\the\@titlenotetext #1{#2}}}
-
-\newcount{\@authori}
-
-\iffalse
-\def \additionalauthors {%
-  \if \@gtrp{\@authorcount}{3}%
-    \section{Additional Authors}%
-    \label{@addauthors}%
-    \noindent
-    \@authori = 4
-    {\let \\ = ,%
-     \loop 
-       \textbf{\@name{\@authorname\romannumeral\@authori}},
-       \@name{\@authoraffil\romannumeral\@authori},
-       email: \@name{\@authoremail\romannumeral\@authori}.%
-       \@increment \@authori
-     \if \@notp{\@gtrp{\@authori}{\@authorcount}} \repeat}%
+\def\subsection{%
+    \@startsection{subsection}{2}{\z@}{-8\p@ \@plus -2\p@ \@minus -\p@}
+    {4\p@}{\secfnt}%
+}
+\def\subsubsection{%
+    \@startsection{subsubsection}{3}{\z@}{-8\p@ \@plus -2\p@ \@minus -\p@}%
+    {4\p@}{\subsecfnt}%
+}
+%\def\paragraph{%
+%    \vskip 12pt\@startsection{paragraph}{3}{\z@}{6\p@ \@plus \p@}% original
+%    {-5\p@}{\subsecfnt}%
+%}
+%  If one wants sections, subsections and subsubsections numbered,
+%  but not paragraphs, one usually sets secnumepth to 3.
+%  For that, the "depth" of paragraphs must be given correctly
+%  in the definition (``4'' instead of ``3'' as second argument
+%  of @startsection):
+\def\paragraph{%
+    \vskip 12pt\@startsection{paragraph}{4}{\z@}{6\p@ \@plus \p@}%    % GM and Wolfgang May - 11/30/06
+    {-5\p@}{\subsecfnt}%
+}
+\let\@period=.
+\def\@startsection#1#2#3#4#5#6{%
+        \if@noskipsec  %gkmt, 11 aug 99
+        \global\let\@period\@empty
+        \leavevmode
+        \global\let\@period.%
+    \fi
+      \par %
+    \@tempskipa #4\relax
+    \@afterindenttrue
+    \ifdim \@tempskipa <\z@
+        \@tempskipa -\@tempskipa
+        \@afterindentfalse
+    \fi
+    \if@nobreak
+    \everypar{}%
+    \else
+        \addpenalty\@secpenalty
+        \addvspace\@tempskipa
+    \fi
+\parskip=0pt % GM July 2000 (non numbered) section heads
+    \@ifstar
+        {\@ssect{#3}{#4}{#5}{#6}}
+        {\@dblarg{\@sect{#1}{#2}{#3}{#4}{#5}{#6}}}%
+}
+\def\@sect#1#2#3#4#5#6[#7]#8{%
+    \ifnum #2>\c@secnumdepth
+        \let\@svsec\@empty
+    \else
+        \refstepcounter{#1}%
+        \edef\@svsec{%
+            \begingroup
+                %\ifnum#2>2 \noexpand\rm \fi % changed to next 29 July 2002 gkmt
+            \ifnum#2>2 \noexpand#6 \fi
+                \csname the#1\endcsname
+            \endgroup
+            \ifnum #2=1\relax .\fi
+            \hskip 1em
+        }%
+    \fi
+    \@tempskipa #5\relax
+    \ifdim \@tempskipa>\z@
+        \begingroup
+            #6\relax
+            \@hangfrom{\hskip #3\relax\@svsec}%
+            \begingroup
+                \interlinepenalty \@M
+                \if@uchead
+                    \uppercase{#8}%
+                \else
+                    #8%
+                \fi
+                \par
+            \endgroup
+        \endgroup
+        \csname #1mark\endcsname{#7}%
+        \vskip -12pt  %gkmt, 11 aug 99 and GM July 2000 (was -14) - numbered section head spacing
+\addcontentsline{toc}{#1}{%
+            \ifnum #2>\c@secnumdepth \else
+                \protect\numberline{\csname the#1\endcsname}%
+            \fi
+            #7%
+        }%
+    \else
+        \def\@svsechd{%
+            #6%
+            \hskip #3\relax
+            \@svsec
+            \if@uchead
+                \uppercase{#8}%
+            \else
+                #8%
+            \fi
+            \csname #1mark\endcsname{#7}%
+            \addcontentsline{toc}{#1}{%
+                \ifnum #2>\c@secnumdepth \else
+                    \protect\numberline{\csname the#1\endcsname}%
+                \fi
+                #7%
+            }%
+        }%
+    \fi
+    \@xsect{#5}\hskip 1pt
     \par
-  \fi
-  \global\@setflag \@addauthorsdone = \@true}
+}
+\def\@xsect#1{%
+    \@tempskipa #1\relax
+    \ifdim \@tempskipa>\z@
+        \par
+        \nobreak
+        \vskip \@tempskipa
+        \@afterheading
+    \else
+        \global\@nobreakfalse
+        \global\@noskipsectrue
+        \everypar{%
+            \if@noskipsec
+                \global\@noskipsecfalse
+                \clubpenalty\@M
+                \hskip -\parindent
+                \begingroup
+                    \@svsechd
+                    \@period
+                \endgroup
+                \unskip
+                \@tempskipa #1\relax
+                \hskip -\@tempskipa
+            \else
+                \clubpenalty \@clubpenalty
+                \everypar{}%
+            \fi
+        }%
+    \fi
+    \ignorespaces
+}
+\def\@trivlist{%
+    \@topsepadd\topsep
+    \if@noskipsec
+        \global\let\@period\@empty
+        \leavevmode
+        \global\let\@period.%
+    \fi
+    \ifvmode
+        \advance\@topsepadd\partopsep
+    \else
+        \unskip
+        \par
+    \fi
+    \if@inlabel
+        \@noparitemtrue
+        \@noparlisttrue
+    \else
+        \@noparlistfalse
+        \@topsep\@topsepadd
+    \fi
+    \advance\@topsep \parskip
+    \leftskip\z@skip
+    \rightskip\@rightskip
+    \parfillskip\@flushglue
+    \@setpar{\if@newlist\else{\@@par}\fi}
+    \global\@newlisttrue
+    \@outerparskip\parskip
+}
+
+%%% Actually, 'abbrev' works just fine as the default
+%%% Bibliography style.
+
+\typeout{Using 'Abbrev' bibliography style}
+\newcommand\bibyear[2]{%
+    \unskip\quad\ignorespaces#1\unskip
+    \if#2..\quad \else \quad#2 \fi
+}
+\newcommand{\bibemph}[1]{{\em#1}}
+\newcommand{\bibemphic}[1]{{\em#1\/}}
+\newcommand{\bibsc}[1]{{\sc#1}}
+\def\@normalcite{%
+    \def\@cite##1##2{[##1\if@tempswa , ##2\fi]}%
+}
+\def\@citeNB{%
+    \def\@cite##1##2{##1\if@tempswa , ##2\fi}%
+}
+\def\@citeRB{%
+    \def\@cite##1##2{##1\if@tempswa , ##2\fi]}%
+}
+\def\start@cite#1#2{%
+    \edef\citeauthoryear##1##2##3{%
+        ###1%
+        \ifnum#2=\z@ \else\ ###2\fi
+    }%
+    \ifnum#1=\thr@@
+        \let\@@cite\@citeyear
+    \else
+        \let\@@cite\@citenormal
+    \fi
+    \@ifstar{\@citeNB\@@cite}{\@normalcite\@@cite}%
+}
+%\def\cite{\start@cite23}
+\DeclareRobustCommand\cite{\start@cite23}		% January 2008
+\def\citeNP{\cite*}					% No Parentheses e.g. 5
+%\def\citeA{\start@cite10}
+\DeclareRobustCommand\citeA{\start@cite10}		% January 2008
+\def\citeANP{\citeA*}
+%\def\shortcite{\start@cite23}				
+\DeclareRobustCommand\shortcite{\start@cite23}		% January 2008
+\def\shortciteNP{\shortcite*}
+%\def\shortciteA{\start@cite20}
+\DeclareRobustCommand\shortciteA{\start@cite20}		% January 2008
+\def\shortciteANP{\shortciteA*}
+%\def\citeyear{\start@cite30}
+\DeclareRobustCommand\citeyear{\start@cite30}		% January 2008
+\def\citeyearNP{\citeyear*}
+%\def\citeN{%
+\DeclareRobustCommand\citeN{%				% January 2008
+    \@citeRB
+    \def\citeauthoryear##1##2##3{##1\ [##3%
+        \def\reserved@a{##1}%
+        \def\citeauthoryear####1####2####3{%
+            \def\reserved@b{####1}%
+            \ifx\reserved@a\reserved@b
+                ####3%
+            \else
+                \errmessage{Package acmart Error: author mismatch
+                         in \string\citeN^^J^^J%
+                    See the acmart package documentation for explanation}%
+            \fi
+        }%
+    }%
+    \@ifstar\@citeyear\@citeyear
+}
+%\def\shortciteN{%
+\DeclareRobustCommand\shortciteN{%			% January 2008
+    \@citeRB
+    \def\citeauthoryear##1##2##3{##2\ [##3%
+        \def\reserved@a{##2}%
+        \def\citeauthoryear####1####2####3{%
+            \def\reserved@b{####2}%
+            \ifx\reserved@a\reserved@b
+                ####3%
+            \else
+                \errmessage{Package acmart Error: author mismatch
+                         in \string\shortciteN^^J^^J%
+                    See the acmart package documentation for explanation}%
+            \fi
+        }%
+    }%
+    \@ifstar\@citeyear\@citeyear  % GM July 2000
+}
+
+\def\@citenormal{%
+    \@ifnextchar [{\@tempswatrue\@citex;}%
+% original                 {\@tempswafalse\@citex,[]}% was ; Gerry 2/24/00
+{\@tempswafalse\@citex[]}%  	% GERRY FIX FOR BABEL 3/20/2009
+}
+
+\def\@citeyear{%
+    \@ifnextchar [{\@tempswatrue\@citex,}%
+% original                  {\@tempswafalse\@citex,[]}%
+{\@tempswafalse\@citex[]}%	%  GERRY FIX FOR BABEL 3/20/2009
+}
+
+\def\@citex#1[#2]#3{%
+    \let\@citea\@empty
+    \@cite{%
+        \@for\@citeb:=#3\do{%
+            \@citea
+% original            \def\@citea{#1 }%
+            \def\@citea{#1, }% 	% GERRY FIX FOR BABEL 3/20/2009 -- SO THAT YOU GET [1, 2] IN THE BODY TEXT
+            \edef\@citeb{\expandafter\@iden\@citeb}%
+            \if@filesw
+                \immediate\write\@auxout{\string\citation{\@citeb}}%
+            \fi
+            \@ifundefined{b@\@citeb}{%
+                {\bf ?}%
+                \@warning{%
+                    Citation `\@citeb' on page \thepage\space undefined%
+                }%
+            }%
+            {\csname b@\@citeb\endcsname}%
+        }%
+    }{#2}%
+}
+%\let\@biblabel\@gobble   % Dec. 2008 - Gerry
+% ----
+\def\@biblabelnum#1{[#1]} % Gerry's solution #1 - for Natbib -- April 2009
+\let\@biblabel=\@biblabelnum  % Gerry's solution #1 - for Natbib -- April 2009
+\def\newblock{\relax} % Gerry Dec. 2008
+% ---
+\newdimen\bibindent
+\setcounter{enumi}{1}
+\bibindent=0em
+\def\thebibliography#1{% 
+\ifnum\addauflag=0\addauthorsection\global\addauflag=1\fi
+     \section[References]{%    <=== OPTIONAL ARGUMENT ADDED HERE
+        {References} % was uppercased but this affects pdf bookmarks (SP/GM October 2004)
+          {\vskip -9pt plus 1pt} % GM Nov. 2006 / GM July 2000 (for somewhat tighter spacing) 
+         \@mkboth{{\refname}}{{\refname}}%
+     }%
+     \list{[\arabic{enumi}]}{%
+         \settowidth\labelwidth{[#1]}%
+         \leftmargin\labelwidth
+         \advance\leftmargin\labelsep
+         \advance\leftmargin\bibindent
+         \parsep=0pt\itemsep=1pt % GM July 2000
+         \itemindent -\bibindent
+         \listparindent \itemindent
+         \usecounter{enumi}
+     }%
+     \let\newblock\@empty
+     \raggedright % GM July 2000
+     \sloppy
+     \sfcode`\.=1000\relax
+}
+
+
+\gdef\balancecolumns
+{\vfill\eject
+\global\@colht=\textheight
+\global\ht\@cclv=\textheight
+}
+
+\newcount\colcntr
+\global\colcntr=0
+%\newbox\savebox
+\newbox\saveb@x				% January 2008
+
+\gdef \@makecol {%
+\global\advance\colcntr by 1
+\ifnum\colcntr>2 \global\colcntr=1\fi
+   \ifvoid\footins
+     \setbox\@outputbox \box\@cclv
+   \else
+     \setbox\@outputbox \vbox{%
+\boxmaxdepth \@maxdepth
+       \@tempdima\dp\@cclv
+       \unvbox \@cclv
+       \vskip-\@tempdima
+       \vskip \skip\footins
+       \color@begingroup
+         \normalcolor
+         \footnoterule
+         \unvbox \footins
+       \color@endgroup
+       }%
+   \fi
+   \xdef\@freelist{\@freelist\@midlist}%
+   \global \let \@midlist \@empty
+   \@combinefloats
+   \ifvbox\@kludgeins
+     \@makespecialcolbox
+   \else
+     \setbox\@outputbox \vbox to\@colht {%
+\@texttop
+       \dimen@ \dp\@outputbox
+       \unvbox \@outputbox
+   \vskip -\dimen@
+       \@textbottom
+       }%
+   \fi
+   \global \maxdepth \@maxdepth
+}
+\def\titlenote{\@ifnextchar[\@xtitlenote{\stepcounter\@mpfn
+\global\advance\titlenotecount by 1
+\ifnum\titlenotecount=1
+    \raisebox{9pt}{$\ast$}
 \fi
+\ifnum\titlenotecount=2
+    \raisebox{9pt}{$\dagger$}
+\fi
+\ifnum\titlenotecount=3
+    \raisebox{9pt}{$\ddagger$}
+\fi
+\ifnum\titlenotecount=4
+\raisebox{9pt}{$\S$}
+\fi
+\ifnum\titlenotecount=5
+\raisebox{9pt}{$\P$}
+\fi
+         \@titlenotetext
+}}
 
-\let \addauthorsection = \additionalauthors
-
-\def \@placetitlenotes {
-  \the\@titlenotetext}
-
-%                       Utilities
-%                       ---------
-
-
-\newcommand{\centeroncapheight}[1]{%
-  {\setbox\@tempboxa = \hbox{#1}%
-   \@measurecapheight{\@tempdima}%         % Calculate ht(CAP) - ht(text)
-   \advance \@tempdima by -\ht\@tempboxa   %           ------------------
-   \divide \@tempdima by 2                 %                   2
-   \raise \@tempdima \box\@tempboxa}}
-
-\newbox{\@measbox}
-
-\def \@measurecapheight #1{%                            {\dimen}
-  \setbox\@measbox = \hbox{ABCDEFGHIJKLMNOPQRSTUVWXYZ}%
-  #1 = \ht\@measbox}
-
-\long\def \@titlefootnote #1#2{%
-  \insert\footins{%
+\long\def\@titlenotetext#1{\insert\footins{%
+\ifnum\titlenotecount=1\global\tntoks={#1}\fi
+\ifnum\titlenotecount=2\global\tntokstwo={#1}\fi
+\ifnum\titlenotecount=3\global\tntoksthree={#1}\fi
+\ifnum\titlenotecount=4\global\tntoksfour={#1}\fi
+\ifnum\titlenotecount=5\global\tntoksfive={#1}\fi
     \reset@font\footnotesize
     \interlinepenalty\interfootnotelinepenalty
     \splittopskip\footnotesep
     \splitmaxdepth \dp\strutbox \floatingpenalty \@MM
     \hsize\columnwidth \@parboxrestore
-%%%    \protected@edef\@currentlabel{%
-%%%       \csname p@footnote\endcsname\@thefnmark}%
+    \protected@edef\@currentlabel{%
+    }%
     \color@begingroup
-      \def \@makefnmark {$^{#1}$}%
-      \@makefntext{%
-        \rule\z@\footnotesep\ignorespaces#2\@finalstrut\strutbox}%
-    \color@endgroup}}
-
-%                       LaTeX Modifications
-%                       ----- -------------
+   \color@endgroup}}
 
-\def \@seccntformat #1{%
-  \@name{\the#1}%
-  \@expandaftertwice\@seccntformata \csname the#1\endcsname.\@mark
-  \quad}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\ps@plain
+\baselineskip=11pt
+\let\thepage\relax % For NO page numbers - GM Nov. 30th. 1999 and July 2000
+\def\setpagenumber#1{\global\setcounter{page}{#1}}
+%\pagenumbering{arabic}  % Arabic page numbers GM July 2000
+\twocolumn             % Double column.
+\flushbottom           % Even bottom -- alas, does not balance columns at end of document
+\pagestyle{plain}
 
-\def \@seccntformata #1.#2\@mark{%
-  \if \@emptyargp{#2}.\fi}
-
-%                       Revision History
-%                       -------- -------
+% Need Copyright Year and Copyright Data to be user definable (in .tex file).
+% Gerry Nov. 30th. 1999
+\newtoks\copyrtyr
+\newtoks\acmcopyr
+\newtoks\boilerplate
+\global\acmcopyr={X-XXXXX-XX-X/XX/XX}  % Default - 5/11/2001 *** Gerry
+\global\copyrtyr={\the\year}                % Default - 3/3/2003 *** Gerry
+\def\acmPrice#1{\gdef\@acmPrice{#1}}
+\acmPrice{} %article price  % Changed to 15 - June 2012 - Gerry
 
 
-%  Date         Person  Ver.    Change
-%  ----         ------  ----    ------
+\def\CopyrightYear#1{\global\copyrtyr{#1}}
+\def\crdata#1{\global\acmcopyr{#1}}
+\def\permission#1{\global\boilerplate{#1}}
 
-%  2004.09.12   PCA     0.1--5  Preliminary development.
+% ISBN
+%
+\def\isbn#1{\global\acmcopyr={#1}}
+\isbn{978-1-4503-2138-9}
 
-%  2004.11.18   PCA     0.5     Start beta testing.
+\RequirePackage{url}
+\urlstyle{rm}
+\def\doi#1{\def\@doi{#1}}
+\doi{10.1145/1235}
+\def\printdoi#1{\url{#1}}
 
-%  2004.11.19   PCA     0.6     Obsolete \author and replace with
-%                               \authorinfo.
-%                               Add 'nocopyrightspace' option.
-%                               Compress article opener spacing.
-%                               Add 'mathtime' option.
-%                               Increase text height by 6 points.
 
-%  2004.11.28   PCA     0.7     Add 'cm/computermodern' options.
-%                               Change default to Times text.
 
-%  2004.12.14   PCA     0.8     Remove use of mathptm.sty; it cannot
-%                               coexist with latexsym or amssymb.
+% Copyright
+\RequirePackage{acmcopyright}
+\setcopyright{none}
 
-%  2005.01.20   PCA     0.9     Rename class file to sigplanconf.cls.
+%
+\global\boilerplate={\@copyrightpermission}
 
-%  2005.03.05   PCA     0.91    Change default copyright data.
 
-%  2005.03.06   PCA     0.92    Add at-signs to some macro names.
 
-%  2005.03.07   PCA     0.93    The 'onecolumn' option defaults to '11pt',
-%                               and it uses the full type width.
+\newtoks\copyrightetc
+\ifnum\ACM@basesize=9\relax
+\global\copyrightetc{%
+{\noindent\confname\ \the\conf\ \the\confinfo}\par\smallskip
+  \if@printcopyright
+    \copyright\ \the\copyrtyr\ \@copyrightowner
+  \fi
+  \if@acmowned ISBN \else\ifnum\acm@copyrightmode=2 ISBN \else \par\smallskip ACM ISBN \fi\fi
+ \the\acmcopyr\ifx\@acmPrice\@empty.\else\dots\@acmPrice\fi\par\smallskip
+{DOI: \small\expandafter\printdoi\expandafter{\@doi}}} 
+\toappear{\fontsize{7pt}{8pt}\fontfamily{ptm}\selectfont
+  \the\boilerplate\par\smallskip
+ \the\copyrightetc}
+\fi
+\ifnum\ACM@basesize=10\relax
+\global\copyrightetc{%
+{\noindent\confname\ \the\conf\ \the\confinfo}\par\smallskip
+  \if@printcopyright
+    \copyright\ \the\copyrtyr\ \@copyrightowner
+  \fi
+  \if@acmowned ISBN \else\ifnum\acm@copyrightmode=2 ISBN \else \par\smallskip ACM ISBN \fi\fi
+ \the\acmcopyr\ifx\@acmPrice\@empty.\else\dots\@acmPrice\fi\par\smallskip
+{DOI: \small\expandafter\printdoi\expandafter{\@doi}}} 
+\toappear{\fontsize{7.5pt}{8.5pt}\fontfamily{ptm}\selectfont
+  \the\boilerplate\par\smallskip
+ \the\copyrightetc}
+\fi
+%\DeclareFixedFont{\altcrnotice}{OT1}{tmr}{m}{n}{8}  % << patch needed for accenting e.g. Montreal - Gerry, May 2007
+%\DeclareFixedFont{\altconfname}{OT1}{tmr}{m}{it}{8}  % << patch needed for accenting in italicized confname - Gerry, May 2007
+%
+%{\altconfname{{\the\conf}}} {\altcrnotice\the\confinfo\par} \the\copyrightetc.}  % << Gerry, May 2007
+%
+% The following section (i.e. 3 .sty inclusions) was added in May 2007 so as to fix the problems that many
+% authors were having with accents. Sometimes accents would occur, but the letter-character would be of a different
+% font. Conversely the letter-character font would be correct but, e.g. a 'bar' would appear superimposed on the
+% character instead of, say, an unlaut/diaresis. Sometimes the letter-character would NOT appear at all.
+% Using [T1]{fontenc} outright was not an option as this caused 99% of the authors to 'produce' a Type-3 (bitmapped)
+% PDF file - useless for production. 
+%
+% For proper (font) accenting we NEED these packages to be part of the .cls file i.e. 'ae', 'aecompl' and 'aeguil' 
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%% This is file `ae.sty' 
+\def\fileversion{1.3}
+\def\filedate{2001/02/12}
+\NeedsTeXFormat{LaTeX2e}
+%\ProvidesPackage{ae}[\filedate\space\fileversion\space  % GM
+% Almost European Computer Modern]                       % GM - keeping the log file clean(er)
+\newif\if@ae@slides \@ae@slidesfalse
+\DeclareOption{slides}{\@ae@slidestrue}
+\ProcessOptions
+\fontfamily{aer}
+\RequirePackage[T1]{fontenc}
+\if@ae@slides
+    \renewcommand{\sfdefault}{laess}
+    \renewcommand{\rmdefault}{laess} % no roman
+    \renewcommand{\ttdefault}{laett}
+\else
+    \renewcommand{\sfdefault}{aess}
+    \renewcommand{\rmdefault}{aer}
+    \renewcommand{\ttdefault}{aett}
+\fi
+\endinput
+%% 
+%% End of file `ae.sty'.
+%
+%
+\def\fileversion{0.9}
+\def\filedate{1998/07/23}
+\NeedsTeXFormat{LaTeX2e}
+%\ProvidesPackage{aecompl}[\filedate\space\fileversion\space   % GM
+%T1 Complements for AE fonts (D. Roegel)]                      % GM -- keeping the log file clean(er)
+ 
+\def\@ae@compl#1{{\fontencoding{T1}\fontfamily{cmr}\selectfont\symbol{#1}}}
+\def\guillemotleft{\@ae@compl{19}}
+\def\guillemotright{\@ae@compl{20}}
+\def\guilsinglleft{\@ae@compl{14}}
+\def\guilsinglright{\@ae@compl{15}}
+\def\TH{\@ae@compl{222}}
+\def\NG{\@ae@compl{141}}
+\def\ng{\@ae@compl{173}}
+\def\th{\@ae@compl{254}}
+\def\DJ{\@ae@compl{208}}
+\def\dj{\@ae@compl{158}}
+\def\DH{\@ae@compl{208}}
+\def\dh{\@ae@compl{240}}
+\def\@perthousandzero{\@ae@compl{24}}
+\def\textperthousand{\%\@perthousandzero}
+\def\textpertenthousand{\%\@perthousandzero\@perthousandzero}
+\endinput
+%
+%
+%% This is file `aeguill.sty' 
+% This file gives french guillemets (and not guillemots!)
+% built with the Polish CMR fonts (default), WNCYR fonts, the LASY fonts 
+% or with the EC fonts. 
+% This is useful in conjunction with the ae package
+% (this package loads the ae package in case it has not been loaded)
+%  and with or without the french(le) package.
+%
+% In order to get the guillemets, it is necessary to either type
+% \guillemotleft and \guillemotright, or to use an 8 bit encoding
+% (such as ISO-Latin1) which selects these two commands, 
+% or, if you use the french package (but not the frenchle package), 
+% to type << or >>.
+%
+% By default, you get the Polish CMR guillemets; if this package is loaded
+% with the `cm' option, you get the LASY guillemets; with `ec,' you
+% get the EC guillemets, and with `cyr,' you get the cyrillic guillemets.
+%
+% In verbatim mode, you always get the EC/TT guillemets.
+%
+% The default option is interesting in conjunction with PDF,
+% because there is a Type 1 version of the Polish CMR fonts
+% and these guillemets are very close in shape to the EC guillemets.
+% There are no free Type 1 versions of the EC fonts.
+%
+% Support for Polish CMR guillemets was kindly provided by 
+% Rolf Niepraschk <niepraschk@ptb.de> in version 0.99 (2000/05/22).
+% Bernd Raichle provided extensive simplifications to the code
+% for version 1.00.
+%
+% This package is released under the LPPL.
+%
+% Changes:
+%   Date        version
+%   2001/04/12  1.01    the frenchle and french package are now distinguished.
+%
+\def\fileversion{1.01}
+\def\filedate{2001/04/12}
+\NeedsTeXFormat{LaTeX2e}
+%\ProvidesPackage{aeguill}[2001/04/12 1.01 %    % GM
+%AE fonts with french guillemets (D. Roegel)]   % GM - keeping the log file clean(er)
+%\RequirePackage{ae}  % GM May 2007 - already embedded here
 
-%  2005.03.15   PCA     0.94    Add at-signs to more macro names.
-%                               Allow margin paragraphs during review.
+\newcommand{\@ae@switch}[4]{#4}
+\DeclareOption{ec}{\renewcommand\@ae@switch[4]{#1}}
+\DeclareOption{cm}{\renewcommand\@ae@switch[4]{#2}}
+\DeclareOption{cyr}{\renewcommand\@ae@switch[4]{#3}}
+\DeclareOption{pl}{\renewcommand\@ae@switch[4]{#4}}
 
-%  2005.03.22   PCA     0.95    Implement \euro.
-%                               Remove proof and newdef environments.
 
-%  2005.05.06   PCA     1.0     Eliminate 'onecolumn' option.
-%                               Change footer to small italic and eliminate
-%                               left portion if no \preprintfooter.
-%                               Eliminate copyright notice if preprint.
-%                               Clean up and shrink copyright box.
+%
+% Load necessary packages
+%
+\@ae@switch{% ec
+  % do nothing
+}{% cm
+  \RequirePackage{latexsym}%  GM - May 2007 - already 'mentioned as required' up above
+}{% cyr
+  \RequirePackage[OT2,T1]{fontenc}%
+}{% pl
+  \RequirePackage[OT4,T1]{fontenc}%
+}
 
-%  2005.05.30   PCA     1.1     Add alternate permission statements.
+% The following command will be compared to \frenchname,
+% as defined in french.sty and frenchle.sty.
+\def\aeguillfrenchdefault{french}%
 
-%  2005.06.29   PCA     1.1     Publish final first edition of guide.
+\let\guill@verbatim@font\verbatim@font
+\def\verbatim@font{\guill@verbatim@font\ecguills{cmtt}%
+                   \let\guillemotleft\@oguills\let\guillemotright\@fguills}
 
-%  2005.07.14   PCA     1.2     Add \subparagraph.
-%                               Use block paragraphs in lists, and adjust
-%                               spacing between items and paragraphs.
+\begingroup \catcode`\<=13 \catcode`\>=13
+\def\x{\endgroup
+ \def\ae@lfguill{<<}%
+ \def\ae@rfguill{>>}%
+}\x
 
-%  2006.06.22   PCA     1.3     Add 'reprint' option and associated
-%                               commands.
+\newcommand{\ecguills}[1]{%
+  \def\selectguillfont{\fontencoding{T1}\fontfamily{#1}\selectfont}%
+  \def\@oguills{{\selectguillfont\symbol{19}}}%
+  \def\@fguills{{\selectguillfont\symbol{20}}}%
+  } 
 
-%  2006.08.24   PCA     1.4     Fix bug in \maketitle case command.
+\newcommand{\aeguills}{%
+  \ae@guills
+  % We redefine \guillemotleft and \guillemotright
+  % in order to catch them when they are used 
+  % with \DeclareInputText (in latin1.def for instance)
+  % We use \auxWARNINGi as a safe indicator that french.sty is used.
+  \gdef\guillemotleft{\ifx\auxWARNINGi\undefined
+                         \@oguills % neither french.sty nor frenchle.sty
+                      \else
+                         \ifx\aeguillfrenchdefault\frenchname
+                           \ae@lfguill  % french.sty
+                         \else
+                           \@oguills    % frenchle.sty
+                         \fi
+                      \fi}%
+  \gdef\guillemotright{\ifx\auxWARNINGi\undefined
+                         \@fguills % neither french.sty nor frenchle.sty
+                       \else
+                         \ifx\aeguillfrenchdefault\frenchname
+                           \ae@rfguill  % french.sty
+                         \else
+                           \@fguills    % frenchle.sty
+                         \fi
+                       \fi}%
+  }
 
-%  2007.03.13   PCA     1.5     The title banner only displays with the
-%                               'preprint' option.
+%
+% Depending on the class option
+% define the internal command \ae@guills
+\@ae@switch{% ec
+  \newcommand{\ae@guills}{%
+    \ecguills{cmr}}%
+}{% cm
+  \newcommand{\ae@guills}{%
+    \def\selectguillfont{\fontencoding{U}\fontfamily{lasy}%
+            \fontseries{m}\fontshape{n}\selectfont}%
+    \def\@oguills{\leavevmode\nobreak
+                \hbox{\selectguillfont (\kern-.20em(\kern.20em}\nobreak}%
+    \def\@fguills{\leavevmode\nobreak
+                \hbox{\selectguillfont \kern.20em)\kern-.2em)}%
+                \ifdim\fontdimen\@ne\font>\z@\/\fi}}%
+}{% cyr
+  \newcommand{\ae@guills}{%
+    \def\selectguillfont{\fontencoding{OT2}\fontfamily{wncyr}\selectfont}%
+    \def\@oguills{{\selectguillfont\symbol{60}}}%
+    \def\@fguills{{\selectguillfont\symbol{62}}}}
+}{% pl
+  \newcommand{\ae@guills}{%
+    \def\selectguillfont{\fontencoding{OT4}\fontfamily{cmr}\selectfont}%
+    \def\@oguills{{\selectguillfont\symbol{174}}}%
+    \def\@fguills{{\selectguillfont\symbol{175}}}}
+}
 
-%  2007.06.06   PCA     1.6     Use \bibfont in \thebibliography.
-%                               Add 'natbib' option to load and configure
-%                                 the natbib package.
 
-%  2007.11.20   PCA     1.7     Balance line lengths in centered article
-%                                 title (thanks to Norman Ramsey).
+\AtBeginDocument{%
+  \ifx\GOfrench\undefined
+    \aeguills
+  \else
+    \let\aeguill@GOfrench\GOfrench
+    \gdef\GOfrench{\aeguill@GOfrench \aeguills}%
+  \fi
+  }
 
-%  2009.01.26   PCA     1.8     Change natbib \bibpunct values.
+\endinput
+%
 
-%  2009.03.24   PCA     1.9     Change natbib to use the 'numbers' option.
-%                               Change templates to use 'natbib' option.
-
-%  2009.09.01   PCA     2.0     Add \reprintprice command (suggested by
-%                                 Stephen Chong).
-
-%  2009.09.08   PCA     2.1     Make 'natbib' the default; add 'nonatbib'.
-%               SB              Add 'authoryear' and 'numbers' (default) to
-%                               control citation style when using natbib.
-%                               Add \bibpunct to change punctuation for
-%                               'authoryear' style.
-
-%  2009.09.21   PCA     2.2     Add \softraggedright to the thebibliography
-%                               environment. Also add to template so it will
-%                               happen with natbib.
-
-%  2009.09.30   PCA     2.3     Remove \softraggedright from thebibliography.  
-%                               Just include in the template.
-
-%  2010.05.24   PCA     2.4     Obfuscate author's email address.

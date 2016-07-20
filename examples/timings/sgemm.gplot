@@ -7,7 +7,7 @@ set output "sgemm.eps"
 set border 3 front linewidth 1
 set grid noxtics nomxtics ytics nomytics noztics nomztics \
  nox2tics nomx2tics noy2tics nomy2tics nocbtics nomcbtics
-set grid layerdefault   lt 0 linewidth 0.500,  lt 0 linewidth 0.500
+set grid layerdefault lt 0 linewidth 0.500,  lt 0 linewidth 0.500
 #set key outside right top vertical Left reverse noenhanced autotitle columnhead nobox
 #set key invert samplen 4 spacing 1 width 0 height 0 
 set key bottom right

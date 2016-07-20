@@ -1,3 +1,28 @@
+@article{ehohe12,
+   author = {Hohenstein, Edward G. and Parrish, Robert M. and Sherrill, C. David and Mart\'{\i}nez, Todd J.},
+   title = {Communication: Tensor hypercontraction. III. Least-squares tensor hypercontraction for the determination of correlated wavefunctions},
+   journal = {J. Chem. Phys.},
+   year = 2012,
+   volume = 137,
+   number = 22, 
+   eid = 221101,
+   pages = 221101,
+   url = "http://scitation.aip.org/content/aip/journal/jcp/137/22/10.1063/1.4768241",
+   doi = "http://dx.doi.org/10.1063/1.4768241" 
+}
+
+@article{edepr14,
+    title = {Density-fitted singles and doubles coupled cluster on graphics processing units},
+    author = {A. Eugene DePrince and Matthew R. Kennedy and Bobby G. Sumpter and C. David Sherrill},
+    journal = {Molecular Phys.},
+    volume = 112,
+    number = {5--6},
+    pages = {844--852},
+    doi = {10.1080/00268976.2013.874599},
+    year = 2013,
+}
+
+
 @article{edepr13,
     title = {Accuracy and Efficiency of Coupled-Cluster Theory Using Density Fitting/Cholesky Decomposition, Frozen Natural Orbitals, and a t1‐Transformed Hamiltonian},
     author = {A. Eugene {DePrince, III} and C. David Sherrill},
@@ -10,7 +35,7 @@
 
 @article{blas,
   author = {C. L. Lawson and R. J. Hanson and R. J. Kincaid and F. T. Krogh},
-  title = {Basic linear algebra sub- programs for Fortran usage},
+  title = {Basic linear algebra sub-programs for {Fortran} usage},
   journal = {ACM Trans. Math. Software},
   volume = 5,
   year = 1979,
@@ -19,14 +44,14 @@
 
 @article{tce,
   title = {Synthesis of High-Performance Parallel Programs for a Class of Ab Initio Quantum Chemistry Models},
-  author = {GERALD BAUMGARTNER and ALEXANDER AUER and DAVID E. BERNHOLDT and ALINA BIBIREATA and VENKATESH CHOPPELLA and DANIEL COCIORVA and XIAOYANG GAO and ROBERT J. HARRISON and SO HIRATA and SRIRAM KRISHNAMOORTHY and SANDHYA KRISHNAN and CHI-CHUNG LAM and QINGDA LU and MARCEL NOOIJEN and RUSSELL M. PITZER and J. RAMANUJAM, P. SADAYAPPAN and ALEXANDER SIBIRYAKOV},
-  journal = {PROCEEDINGS OF THE IEEE},
+  author = {Gerald Baumgartner and Alexander Auer and David E. Bernholdt and Alina Bibireata and Venkatesh Choppella and Daniel Cociorva and Xiaoyang Gao and Robert J. Harrison and So Hirata and Sriram Krishnamoorthy and Sandhya Krishnan and Chi-Chung Lam and Qingda Lu and Marcel Nooijen and Russell M. Pitzer and J. Ramanujam, P. Sadayappan and Alexander Sibiryakov},
+  journal = {Proc. IEEE},
   volume = 93,
   number = 2,
   year = 2005,
 }
 
-@inproceedings{ctf,
+@article{ctf,
   title = {Cyclops Tensor Framework: Reducing Communication and Eliminating Load Imbalance in Massively Parallel Contractions},
   year = 2013,
   isbn = {978-1-4673-6066-1},
@@ -40,7 +65,7 @@
   title = {Using autotuning for accelerating tensor contraction on graphics processing units ({GPU}s)},
   author = {Rivera, Axel Y.},
   note = {Master's Thesis},
-  publisher = {THE UNIVERSITY OF UTAH},
+  publisher = {Univ. Utah},
   year = 2014,
   pages = {1--64},
 }
@@ -78,7 +103,7 @@
 }
 
 @inproceedings{slice,
-  title = {Towards an Efficient Use of the BLAS Library for Multilinear Tensor Contractions},
+  title = {Towards an Efficient Use of the {BLAS} Library for Multilinear Tensor Contractions},
   author = {Edoardo Di Napoli and Diego Fabregat-Traver and Gregorio Quintana-Ort\'{\i} and Paolo Bientinesi},
   year = 2013,
   note = {technical report},
@@ -93,11 +118,24 @@
 }
 
 @inproceedings{magma,
-author = {Kurzak, J. and Tomov, S. and Dongarra, J.},
-title = {Autotuning {GEMM}s for Fermi},
+  author = {Kurzak, J. and Tomov, S. and Dongarra, J.},
+  title = {Autotuning {GEMM}s for {Fermi}},
+  series = {Proc. ACM/IEEE Conference on Supercomputing {(SC '11)}},
+  pubisher = {IEEE Press Piscataway, NJ, USA},
+  year = 2011
+}
 publisher = {University of Tennessee Computer Science},
 booktitle = {Technical Report, UT-CS-11-671, (also Lawn 245)},
-year = 2011
+
+@article{rnath10,
+    title = {An Improved {MAGMA GEMM for Fermi} graphics processing units},
+    author = {Rajib Nath and Stanimire Tomov and Jack Dongarra},
+    journal = {Int. J. High Perf. Comput. Applic.},
+    volume = 24,
+    number = 4,
+    pages = {511--515},
+    year = 2010,
+    doi = {10.1177/1094342010385729},
 }
 
 @inproceedings{quark,
@@ -125,12 +163,12 @@ year = 2011
   url = "http://www.scipy.org/",
 }
 
-@inbook{tnels15,
+@inproceedings{tnels15,
     title = {Generating Efficient Tensor Contractions for {GPUs}},
     author = {Thomas Nelson and Axel Rivera and Mary
         Hall and Paul D. Hovland and Elizabeth Jessup and Boyana Norris
         and Prasanna Balaprakash},
-    booktitle = {Proceedings of The 44th International Conference on Parallel Processing ({ICPP})},
+    booktitle = {Proc. 44th International Conference on Parallel Processing ({ICPP})},
     year = 2015,
 }
 % redundant
@@ -140,12 +178,10 @@ year = 2011
     year = {2014},
 }
 
-@inproceedings{eapra15,
-    title = {Efficient implementation of many-body quantum chemical methods on
-        the {Intel® Xeon Phi™} coprocessor},
+@inproceedings{eapra14,
+    title = {Efficient implementation of many-body quantum chemical methods on the {Intel® Xeon Phi™} coprocessor},
     author = {Edoardo Apr\`{a} and Michael Klemm and Karol Kowalski},
-    series = {SC '14 Proceedings of the International Conference for High
-        Performance Computing, Networking, Storage and Analysis},
+    series = {SC '14 Proc. Int. Conf. HPC},
     pages = {674--684},
     pubisher = {IEEE Press Piscataway, NJ, USA},
     year = 2014,
@@ -168,7 +204,7 @@ year = 2011
       Oliker},
   title = {Thread-level parallelization and optimization of {NWChem} for the
       {Intel MIC} architecture},
-  series = {PMAM '15 Proceedings of the Sixth International Workshop on
+  series = {PMAM '15 Proc. Sixth International Workshop on
       Programming Models and Applications for Multicores and Manycores},
   pages = {58--67},
   publisher = {ACM New York, NY, USA},
@@ -185,7 +221,7 @@ year = 2011
   doi = {10.1109/CLUSTER.2010.26},
 }
 
-@article{dlyka15,
+@article{dlyak15,
     title = {An efficient tensor transpose algorithm for multicore {CPU}, {Intel
         Xeon Phi}, and {NVidia Tesla GPU}},
     author = {Dmitry I. Lyakh},
@@ -223,3 +259,4 @@ year = 2011
     pages = {454--468},
     doi = {10.1016/j.amc.2014.02.051},
 }
+

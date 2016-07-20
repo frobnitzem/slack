@@ -19,6 +19,7 @@ set ytics 0.2 nomirror
 #set grid y
 set format y ""
 #set title "Emulated Tensor Product Time"
+set xlabel "N"
 set ylabel "% of total" 
 set yrange [0:1] noreverse nowriteback
 plot \

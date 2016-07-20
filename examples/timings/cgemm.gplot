@@ -1,0 +1,18 @@
+set term postscript eps enhanced mono dashed lw 2 size 4.5,3 "Times" 24
+set output "cgemm.eps"
+
+set border 3 front linewidth 1
+set grid noxtics nomxtics ytics nomytics noztics nomztics \
+ nox2tics nomx2tics noy2tics nomy2tics nocbtics nomcbtics
+set grid layerdefault   lt 0 linewidth 0.500,  lt 0 linewidth 0.500
+set key bottom right
+
+set xlabel "{/Symbol \326}N"
+set ylabel "Gflops"
+set xrange [0:128]
+set yrange [0:6000]
+set xtics 32 nomirror
+set ytics 0,1000 nomirror
+plot 'times_cplx.dat' u 1:($1**6/$4 * 8e-9) w lp title "cublas", \
+     'times_cplx.dat' u 1:($1**6/$3 * 8e-9) w lp title "magma", \
+     'times_cplx.dat' u 1:($1**6/$2 * 8e-9) w lp title "tdot"
