@@ -14,6 +14,9 @@ template = """/* Compute an output block of C = alpha A . B + beta C
  * 4. This routine only works for the A/B permutations listed (A... B...).
  *    Because of this, it only needs the shapes of C and of contracted
  *    indices.
+ *
+ * %(stats)s
+ *   
  */
 __global__ void
 tdot_k%(name)s(%(Cshape)s,
@@ -189,18 +192,29 @@ bname = lambda blk: "_".join(map(str, blk))
 #
 # thr_blk = [a1,b1,c1,d1]
 # work_blk = [a0,b0,c0,d0,e,f]
-def gen_tdot(thr_blk, work_blk, pa, pb):
+def gen_tdot(blk, thr_blk, pa, pb):
     nc = len(thr_blk) # 4
     T = prod(thr_blk)
     if (len(pa)+len(pb)-nc)%2 == 1:
         print "Invalid output shape!"
 
     n = (len(pa)+len(pb)-nc)/2
-    assert len(work_blk) == n+nc
+    assert all([i >= 0 and i < nc+n for i in pa]), \
+            "A's permutation out of bounds [%d,%d)"%(0,nc+n)
+    assert all([i >= 0 and i < nc+n for i in pb]), \
+            "B's permutation out of bounds [%d,%d)"%(0,nc+n)
+    assert all([(i in pa) ^ (i in pb) for i in range(nc)]), \
+                "A and B must map uniquely to output!"
+    assert all([i in pa and i in pb for i in range(nc,n+nc)]), \
+                "A and B must map to contraction in pairs!"
+    assert len(blk) == n+nc
+    assert all([a % b == 0 for a,b in zip(blk, thr_blk)]), \
+            "thr_blk must divide total output tile size (blk)"
     ws = "\n" + " "*4
 
     # [a,b,c,d,e,f]
-    blk = [a*b for a,b in zip(thr_blk, work_blk)] + work_blk[nc:]
+    #blk = [a*b for a,b in zip(work_blk, thr_blk)] + work_blk[nc:]
+    work_blk = [a/b for a,b in zip(blk, thr_blk)] + blk[nc:]
     outA = [i for i in pa if i < nc] # output inds of A [j,l,k]
     outA.sort() # [j,k,l]
     outB = [i for i in pb if i < nc] # output inds of B [i]
@@ -324,11 +338,19 @@ def gen_tdot(thr_blk, work_blk, pa, pb):
 
     dec_loops = "int " + ", ".join( ["J%d = 0"%i for i in range(n-1)] \
                                    +["J%d = %d"%(n-1,blk[-1])]        )
+    if len(outA) == 0:
+        Aprod = "1"
+    else:
+        Aprod = "*".join([C.shape[i] for i in outA])
+    if len(outB) == 0:
+        Bprod = "1"
+    else:
+        Bprod = "*".join([C.shape[i] for i in outB])
     return template % {
-            'name' :   bname(blk)  + "T" + bname(thr_blk) \
-                     + "A" + bname(pa) + "B" + bname(pb),
-            'Aprod' : "*".join([C.shape[i] for i in outA]),
-            'Bprod' : "*".join([C.shape[i] for i in outB]),
+            'name' : kern_name(blk, thr_blk, pa, pb),
+            'stats' : kern_stats(blk, thr_blk, pa, pb),
+            'Aprod' : Aprod,
+            'Bprod' : Bprod,
             'Cshape' : ", ".join(["int sC%d"%i for i in range(nc+n)]),
             'Cshape_var' : ", ".join(["sC%d"%i for i in range(nc+n)]),
             'tA' : prod(thrA), 'tB' : prod(thrB),
@@ -353,22 +375,45 @@ def gen_tdot(thr_blk, work_blk, pa, pb):
     }
 
 def test():
+    blk = [8,12,3]
     thr_blk = [2,3]
-    work_blk = [4,4,3]
     pa = [1,2]
     pb = [2,0]
-    print gen_tdot(thr_blk, work_blk, pa, pb)
+    print gen_tdot(blk, thr_blk, pa, pb)
+
+def kern_name(blk,thr_blk,pa,pb):
+    return bname(blk)  + "T" + bname(thr_blk) \
+                       + "A" + bname(pa) + "B" + bname(pb)
+
+def kern_stats(blk, thr_blk, pa, pb):
+    n = len(blk)-len(thr_blk) # contracted dims
+    nc = len(thr_blk)
+    Nthr = prod(thr_blk)
+    na = prod(blk[i] for i in pa)
+    nb = prod(blk[i] for i in pb)
+    nc = prod(blk[:n])
+    nn = prod(blk[n:])
+    wA = prod(blk[i] for i in pa if i < nc)
+    wB = prod(blk[i] for i in pb if i < nc)
+    return """
+ * Kernel Stats (mem in #floats):
+ *     total threads  = %d
+ *     total cache    = %d
+ *     shared mem     = %d
+ *     flops (mmult)  = %d
+ *     flops (output) = %d""" % \
+    (Nthr, na+nb+nc+wA+wB, na+nb, 2*nc*nn, 2*nc)
 
 if __name__ == "__main__":
     #test()
     #exit(0)
     argv = sys.argv
     if len(argv) < 5:
-        print "Usage: %s <work_blk> <thread_blk> <pa> <pb>"%argv[0]
+        print "Usage: %s <tile_sz> <thread_blk> <pa> <pb>"%argv[0]
         sys.exit(1)
-    work_blk = map(int,argv[1].split(","))
+    blk      = map(int,argv[1].split(","))
     thr_blk  = map(int,argv[2].split(","))
     pa       = map(int,argv[3].split(","))
     pb       = map(int,argv[4].split(","))
-    print gen_tdot(thr_blk, work_blk, pa, pb)
+    print gen_tdot(blk, thr_blk, pa, pb)
 

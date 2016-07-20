@@ -73,6 +73,7 @@ def tens_index(pre, I, off=0):
 def lin_index(ind, s):
     n = len(ind)
     if n == 0:
+        return 0
         raise ValueError, "lin_index called with blank index!"
     x = ind[0]
     for i in range(1,n):
