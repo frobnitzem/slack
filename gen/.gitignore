@@ -1,3 +1,6 @@
 kern*.cu
 test*.cu
 tdot2
+kernels/*.cu
+kernels/*.c
+kernels/*.so
